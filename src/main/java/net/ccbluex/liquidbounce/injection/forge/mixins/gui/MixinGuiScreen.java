@@ -80,12 +80,35 @@ public abstract class MixinGuiScreen {
     }
 
     /**
+     * Check if current GUI uses morphing gradient background
+     */
+    private boolean usesMorphingGradient() {
+        GuiScreen currentScreen = (GuiScreen) (Object) this;
+        return currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiMainMenu ||
+               currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiModsMenu ||
+               currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiScripts ||
+               currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration ||
+               currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiServerStatus ||
+               currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiContributors ||
+               currentScreen instanceof net.ccbluex.liquidbounce.ui.client.GuiClientFixes;
+    }
+
+    /**
      * @author CCBlueX
      */
     @Inject(method = "drawBackground", at = @At("HEAD"), cancellable = true)
     private void drawClientBackground(final CallbackInfo callbackInfo) {
         disableLighting();
         disableFog();
+
+        // Skip custom background for GUIs that use morphing gradient
+        if (usesMorphingGradient()) {
+            // Only draw particles if enabled
+            if (ClientConfiguration.INSTANCE.getParticles()) {
+                ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+            }
+            return; // Let the GUI handle its own background
+        }
 
         if (ClientConfiguration.INSTANCE.getCustomBackground()) {
             final Background background = LiquidBounce.INSTANCE.getBackground();
@@ -128,6 +151,11 @@ public abstract class MixinGuiScreen {
 
     @Inject(method = "drawBackground", at = @At("RETURN"))
     private void drawParticles(final CallbackInfo callbackInfo) {
+        // Skip particles for morphing gradient GUIs (they handle it themselves)
+        if (usesMorphingGradient()) {
+            return;
+        }
+        
         if (ClientConfiguration.INSTANCE.getParticles())
             ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
     }

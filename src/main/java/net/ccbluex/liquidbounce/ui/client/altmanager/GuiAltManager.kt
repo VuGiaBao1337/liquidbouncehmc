@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.RandomUtils.randomAccount
 import net.ccbluex.liquidbounce.utils.kotlin.SharedScopes
 import net.ccbluex.liquidbounce.utils.kotlin.swap
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.ccbluex.liquidbounce.utils.ui.AbstractScreen
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -39,13 +40,14 @@ import net.minecraft.client.gui.GuiSlot
 import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.Session
 import org.lwjgl.input.Keyboard
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
+import kotlin.math.*
 
 class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
 
     var status = "§7Idle..."
-
     private lateinit var loginButton: GuiButton
     private lateinit var randomAltButton: GuiButton
     private lateinit var randomNameButton: GuiButton
@@ -54,6 +56,27 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
     private lateinit var copyButton: GuiButton
     private lateinit var altsList: GuiList
     private lateinit var searchField: GuiTextField
+    
+    // Morphing gradient animation system
+    private var animationTime = 0f
+    private var morphingSpeed = 0.008f
+    
+    private val gradientSets = arrayOf(
+    // Set 1: Deep Blue to Sky Blue
+    arrayOf(Color(25, 55, 109), Color(30, 80, 150), Color(40, 120, 200), Color(60, 150, 240)),
+    // Set 2: Sky Blue to Light Blue  
+    arrayOf(Color(60, 150, 240), Color(80, 170, 255), Color(100, 180, 255), Color(120, 200, 255)),
+    // Set 3: Royal Blue variations
+    arrayOf(Color(15, 82, 186), Color(25, 100, 200), Color(40, 120, 220), Color(60, 140, 240)),
+    // Set 4: Ocean Blue cycle
+    arrayOf(Color(10, 70, 160), Color(20, 90, 180), Color(35, 110, 200), Color(25, 55, 109))
+)
+    
+    private var currentGradientIndex = 0
+    private var nextGradientIndex = 1
+    private var morphProgress = 0f
+    private val meshResolution = 20
+    private val gradientMesh = Array(meshResolution + 1) { Array(meshResolution + 1) { Color.WHITE } }
 
     override fun initGui() {
         val textFieldWidth = (width / 8).coerceAtLeast(70)
@@ -62,15 +85,12 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
 
         altsList = GuiList(this).apply {
             registerScrollButtons(7, 8)
-
             val mightBeTheCurrentAccount = accountsConfig.accounts.indexOfFirst { it.name == mc.session.username }
             elementClicked(mightBeTheCurrentAccount, false, 0, 0)
-
             scrollBy(mightBeTheCurrentAccount * this.getSlotHeight())
         }
 
         // Setup buttons
-
         val startPositionY = 22
         addButton = +GuiButton(1, width - 80, startPositionY + 24, 70, 20, translationButton("add"))
         removeButton = +GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, translationButton("remove"))
@@ -79,8 +99,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
         +GuiButton(7, width - 80, startPositionY + 24 * 5, 70, 20, translationButton("import"))
         +GuiButton(12, width - 80, startPositionY + 24 * 6, 70, 20, translationButton("export"))
         copyButton = +GuiButton(8, width - 80, startPositionY + 24 * 7, 70, 20, translationButton("altManager.copy"))
-
         +GuiButton(0, width - 80, height - 65, 70, 20, translationButton("back"))
+
         loginButton = +GuiButton(3, 5, startPositionY + 24, 90, 20, translationButton("altManager.login"))
         randomAltButton = +GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, translationButton("altManager.randomAlt"))
         randomNameButton = +GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, translationButton("altManager.randomName"))
@@ -94,10 +114,131 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
         +GuiButton(11, 5, startPositionY + 24 * 7, 90, 20, translationButton("altManager.cape"))
     }
 
+    private fun updateMorphingGradient() {
+        animationTime += morphingSpeed
+        morphProgress += 0.01f
+        
+        if (morphProgress >= 1f) {
+            morphProgress = 0f
+            currentGradientIndex = nextGradientIndex
+            nextGradientIndex = (nextGradientIndex + 1) % gradientSets.size
+        }
+        
+        updateGradientMesh()
+    }
+
+    private fun updateGradientMesh() {
+        val currentSet = gradientSets[currentGradientIndex]
+        val nextSet = gradientSets[nextGradientIndex]
+        
+        for (x in 0..meshResolution) {
+            for (y in 0..meshResolution) {
+                val xRatio = x.toFloat() / meshResolution
+                val yRatio = y.toFloat() / meshResolution
+                
+                val noiseX = sin(animationTime * 0.5f + xRatio * 4f + yRatio * 2f) * 0.1f
+                val noiseY = cos(animationTime * 0.7f + xRatio * 3f + yRatio * 4f) * 0.1f
+                
+                val adjustedX = (xRatio + noiseX).coerceIn(0f, 1f)
+                val adjustedY = (yRatio + noiseY).coerceIn(0f, 1f)
+                
+                val currentColor = interpolateGradientColors(currentSet, adjustedX, adjustedY)
+                val nextColor = interpolateGradientColors(nextSet, adjustedX, adjustedY)
+                
+                gradientMesh[x][y] = morphColors(currentColor, nextColor, morphProgress)
+            }
+        }
+    }
+
+    private fun interpolateGradientColors(colorSet: Array<Color>, x: Float, y: Float): Color {
+        val topLeft = colorSet[0]
+        val topRight = colorSet[1]
+        val bottomLeft = colorSet[2]
+        val bottomRight = colorSet[3]
+        
+        val topColor = interpolateColors(topLeft, topRight, x)
+        val bottomColor = interpolateColors(bottomLeft, bottomRight, x)
+        return interpolateColors(topColor, bottomColor, y)
+    }
+
+    private fun interpolateColors(color1: Color, color2: Color, ratio: Float): Color {
+        val r = (color1.red + (color2.red - color1.red) * ratio).toInt().coerceIn(0, 255)
+        val g = (color1.green + (color2.green - color1.green) * ratio).toInt().coerceIn(0, 255)
+        val b = (color1.blue + (color2.blue - color1.blue) * ratio).toInt().coerceIn(0, 255)
+        return Color(r, g, b)
+    }
+
+    private fun morphColors(color1: Color, color2: Color, progress: Float): Color {
+        val easedProgress = easeInOutCubic(progress)
+        return interpolateColors(color1, color2, easedProgress)
+    }
+
+    private fun easeInOutCubic(t: Float): Float {
+        return if (t < 0.5f) {
+            4f * t * t * t
+        } else {
+            1f - (-2f * t + 2f).pow(3) / 2f
+        }
+    }
+
+    private fun drawMorphingGradientBackground() {
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glShadeModel(GL_SMOOTH)
+        
+        updateMorphingGradient()
+        drawGradientMesh()
+        
+        glShadeModel(GL_FLAT)
+        glEnable(GL_TEXTURE_2D)
+    }
+
+    private fun drawGradientMesh() {
+        val stepX = width.toFloat() / meshResolution
+        val stepY = height.toFloat() / meshResolution
+        
+        for (x in 0 until meshResolution) {
+            for (y in 0 until meshResolution) {
+                val x1 = x * stepX
+                val y1 = y * stepY
+                val x2 = (x + 1) * stepX
+                val y2 = (y + 1) * stepY
+                
+                val color1 = gradientMesh[x][y]
+                val color2 = gradientMesh[x + 1][y]
+                val color3 = gradientMesh[x + 1][y + 1]
+                val color4 = gradientMesh[x][y + 1]
+                
+                glBegin(GL_QUADS)
+                
+                glColor3f(color1.red / 255f, color1.green / 255f, color1.blue / 255f)
+                glVertex2f(x1, y1)
+                
+                glColor3f(color2.red / 255f, color2.green / 255f, color2.blue / 255f)
+                glVertex2f(x2, y1)
+                
+                glColor3f(color3.red / 255f, color3.green / 255f, color3.blue / 255f)
+                glVertex2f(x2, y2)
+                
+                glColor3f(color4.red / 255f, color4.green / 255f, color4.blue / 255f)
+                glVertex2f(x1, y2)
+                
+                glEnd()
+            }
+        }
+    }
+
+
+
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         assumeNonVolatile {
-            drawBackground(0)
+            // Draw morphing gradient background
+            drawMorphingGradientBackground()
+            
+
             altsList.drawScreen(mouseX, mouseY, partialTicks)
+
             Fonts.fontSemibold40.drawCenteredString(translationMenu("altManager"), width / 2f, 6f, 0xffffff)
             Fonts.fontSemibold35.drawCenteredString(
                 if (searchField.text.isEmpty()) "${accountsConfig.accounts.size} Alts" else altsList.accounts.size.toString() + " Search Results",
@@ -106,9 +247,11 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                 0xffffff
             )
             Fonts.fontSemibold35.drawCenteredString(status, width / 2f, 32f, 0xffffff)
+
             Fonts.fontSemibold35.drawStringWithShadow(
                 "§7User: §a${mc.getSession().username}", 6f, 6f, 0xffffff
             )
+
             Fonts.fontSemibold35.drawStringWithShadow(
                 "§7Type: §a${
                     if (altService.currentService == AltService.EnumAltService.THEALTENING) "TheAltening" else if (isValidTokenOffline(
@@ -117,6 +260,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                     ) "Premium" else "Cracked"
                 }", 6f, 15f, 0xffffff
             )
+
             searchField.drawTextBox()
             if (searchField.text.isEmpty() && !searchField.isFocused) Fonts.fontSemibold40.drawStringWithShadow(
                 translationText("Search"), searchField.xPosition + 4f, 17f, 0xffffff
@@ -148,7 +292,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                     loginButton.enabled = false
                     randomAltButton.enabled = false
                     randomNameButton.enabled = false
-
                     login(it, {
                         status = "§aLogged into §f§l${mc.session.username}§a."
                     }, { exception ->
@@ -158,7 +301,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                         randomAltButton.enabled = true
                         randomNameButton.enabled = true
                     })
-
                     "§aLogging in..."
                 } ?: "§cSelect an account."
             }
@@ -168,7 +310,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                     loginButton.enabled = false
                     randomAltButton.enabled = false
                     randomNameButton.enabled = false
-
                     login(it, {
                         status = "§aLogged into §f§l${mc.session.username}§a."
                     }, { exception ->
@@ -178,7 +319,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                         randomAltButton.enabled = true
                         randomNameButton.enabled = true
                     })
-
                     "§aLogging in..."
                 } ?: "§cYou do not have any accounts."
             }
@@ -233,8 +373,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                             else -> account.name
                         }
                     }
-                    file.writeText(accounts)
 
+                    file.writeText(accounts)
                     status = "§aExported successfully!"
                 } catch (e: Exception) {
                     status = "§cUnable to export due to error: ${e.message}"
@@ -243,7 +383,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
 
             8 -> {
                 val currentAccount = altsList.selectedAccount
-
                 if (currentAccount == null) {
                     status = "§cSelect an account."
                     return
@@ -279,7 +418,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
 
             13 -> { // Move Up Button
                 val currentAccount = altsList.selectedAccount
-
                 if (currentAccount == null) {
                     status = "§cSelect an account."
                     return
@@ -289,6 +427,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                 if (currentIndex == 0) {
                     return
                 }
+
                 val prevElement = altsList.accounts[currentIndex - 1]
                 val prevIndex = accountsConfig.accounts.indexOf(prevElement)
                 val currentOriginalIndex = accountsConfig.accounts.indexOf(currentAccount)
@@ -301,7 +440,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
 
             14 -> { // Move Down Button
                 val currentAccount = altsList.selectedAccount
-
                 if (currentAccount == null) {
                     status = "§cSelect an account."
                     return
@@ -311,6 +449,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                 if (currentIndex == altsList.accounts.lastIndex) {
                     return
                 }
+
                 val nextElement = altsList.accounts[currentIndex + 1]
                 val nextIndex = accountsConfig.accounts.indexOf(nextElement)
                 val currentOriginalIndex = accountsConfig.accounts.indexOf(currentAccount)
@@ -331,31 +470,22 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
         when (keyCode) {
             // Go back
             Keyboard.KEY_ESCAPE -> mc.displayGuiScreen(prevGui)
-
             // Go one up in account list
             Keyboard.KEY_UP -> altsList.selectedSlot -= 1
-
             // Go one down in account list
             Keyboard.KEY_DOWN -> altsList.selectedSlot += 1
-
             // Go up or down in account list
             Keyboard.KEY_TAB -> altsList.selectedSlot += if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) -1 else 1
-
             // Login into account
             Keyboard.KEY_RETURN -> altsList.elementClicked(altsList.selectedSlot, true, 0, 0)
-
             // Scroll account list
             Keyboard.KEY_NEXT -> altsList.scrollBy(height - 100)
-
             // Scroll account list
             Keyboard.KEY_PRIOR -> altsList.scrollBy(-height + 100)
-
             // Add account
             Keyboard.KEY_ADD -> actionPerformed(addButton)
-
             // Remove account
             Keyboard.KEY_DELETE, Keyboard.KEY_MINUS -> actionPerformed(removeButton)
-
             // Copy when CTRL+C gets pressed
             Keyboard.KEY_C -> {
                 if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) actionPerformed(copyButton)
@@ -387,8 +517,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                 if (search == null || search.isEmpty()) {
                     return accountsConfig.accounts
                 }
-                search = search.lowercase(Locale.getDefault())
 
+                search = search.lowercase(Locale.getDefault())
                 return accountsConfig.accounts.filter {
                     it.name.contains(
                         search, ignoreCase = true
@@ -421,7 +551,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                     loginButton.enabled = false
                     randomAltButton.enabled = false
                     randomNameButton.enabled = false
-
                     login(it, {
                         status = "§aLogged into §f§l${mc.session.username}§a."
                     }, { exception ->
@@ -431,7 +560,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                         randomAltButton.enabled = true
                         randomNameButton.enabled = true
                     })
-
                     "§aLogging in..."
                 } ?: "§cSelect an account."
             }
@@ -439,6 +567,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
 
         override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int) {
             val minecraftAccount = accounts[id]
+
             val accountName = if (minecraftAccount is MojangAccount && minecraftAccount.name.isEmpty()) {
                 minecraftAccount.email
             } else {
@@ -459,7 +588,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
     }
 
     companion object {
-
         val altService = AltService()
         private val activeGenerators = mutableMapOf<String, Boolean>()
 
@@ -497,7 +625,6 @@ class GuiAltManager(private val prevGui: GuiScreen) : AbstractScreen() {
                     "microsoft"
                 )
                 call(SessionUpdateEvent)
-
                 success()
             } catch (exception: Exception) {
                 error(exception)

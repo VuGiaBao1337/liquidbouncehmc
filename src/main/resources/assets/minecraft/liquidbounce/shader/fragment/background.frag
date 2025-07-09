@@ -1,100 +1,137 @@
 /*
- * Original shader from: https://www.shadertoy.com/view/ddKSDd
- * Slightly modified to match the client's atmosphere.
+ * Blue Flag Background Shader
+ * Modified for blue flag theme
+ * Based on aurora borealis effect
  */
 #version 120
 
 #ifdef GL_ES
-precision lowp float;
+precision mediump float;
 #endif
 
-// glslsandbox uniforms
+// Uniforms
 uniform float iTime;
 uniform vec2 iResolution;
 
-// Simple hash function
+// Hash functions
 float hash(float n) {
-    return fract(sin(n) * 43758.5453);
+    return fract(sin(n) * 43758.5453123);
 }
 
-// 2D noise function
+float hash2(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+// Enhanced 2D noise
 float noise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i.x + hash(i.y)), hash(i.x + 1.0 + hash(i.y)), u.x),
-    mix(hash(i.x + hash(i.y + 1.0)), hash(i.x + 1.0 + hash(i.y + 1.0)), u.x), u.y);
+    vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+    
+    return mix(
+        mix(hash2(i + vec2(0.0, 0.0)), hash2(i + vec2(1.0, 0.0)), u.x),
+        mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), u.x), 
+        u.y
+    );
 }
 
-// Mountain range function
-float mountainRange(vec2 uv) {
-    float mountainHeight = 0.0;
-    float frequency = 2.0;
+// Fractal noise
+float fbm(vec2 p) {
+    float value = 0.0;
     float amplitude = 0.5;
-    for (int i = 0; i < 5; i++) {
-        mountainHeight += noise(uv * frequency) * amplitude;
+    float frequency = 1.0;
+    
+    for (int i = 0; i < 4; i++) {
+        value += amplitude * noise(p * frequency);
         frequency *= 2.0;
         amplitude *= 0.5;
     }
-    return mountainHeight;
+    return value;
 }
 
-// Aurora layer function
-vec3 auroraLayer(vec2 uv, float speed, float intensity, vec3 color) {
-    float t = iTime * speed;
-    vec2 scaleXY = vec2(2.0, 2.0);
-    vec2 movement = vec2(2.0, -2.0);
-    vec2 p = uv * scaleXY + t * movement;
-    float n = noise(p + noise(color.xy + p + t));
-
-    float topEdgeSharpness = 0.0; //the smaller this value, the crispier the edge
-    float bottomFadeOut = 0.3; //the higher this value, the more solid the aurora appears
-    float aurora = smoothstep(0.0, topEdgeSharpness, n - uv.y) * (1.0 - smoothstep(0.0, bottomFadeOut, n - uv.y));
-
-    aurora = (n - uv.y * 0.6) ;
-
-    return aurora * intensity * color * 0.5;
-
+// Blue aurora layer
+vec3 blueAuroraLayer(vec2 uv, float speed, float intensity, vec3 color, float offset) {
+    float t = iTime * speed + offset;
+    
+    // Create flowing movement
+    vec2 flow = vec2(
+        sin(t * 0.3 + uv.x * 2.0) * 0.1,
+        cos(t * 0.2 + uv.y * 1.5) * 0.05
+    );
+    
+    vec2 p = uv * vec2(3.0, 2.0) + flow;
+    
+    // Multi-octave noise for aurora
+    float n1 = noise(p + t * 0.5);
+    float n2 = noise(p * 2.0 + t * 0.3) * 0.5;
+    float n3 = noise(p * 4.0 + t * 0.1) * 0.25;
+    
+    float combined = n1 + n2 + n3;
+    
+    // Create aurora shape
+    float auroraShape = smoothstep(0.2, 0.8, combined - uv.y * 0.7);
+    auroraShape *= (1.0 - smoothstep(0.0, 0.4, combined - uv.y * 0.5));
+    auroraShape *= smoothstep(0.0, 0.3, uv.y) * smoothstep(1.0, 0.7, uv.y);
+    
+    return auroraShape * intensity * color;
 }
 
+// Blue color palette for flag theme
+vec3 getBlueColor(float t) {
+    vec3 colors[5];
+    colors[0] = vec3(0.1, 0.3, 0.8);  // Deep Blue
+    colors[1] = vec3(0.2, 0.5, 1.0);  // Sky Blue  
+    colors[2] = vec3(0.0, 0.4, 0.9);  // Royal Blue
+    colors[3] = vec3(0.3, 0.6, 1.0);  // Light Blue
+    colors[4] = vec3(0.1, 0.5, 0.9);  // Ocean Blue
+    
+    float index = t * 4.0;
+    int i = int(index);
+    float f = fract(index);
+    
+    if (i >= 4) return colors[4];
+    return mix(colors[i], colors[i + 1], f);
+}
 
-// Main image function
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = fragCoord / iResolution.xy;
     uv.x *= iResolution.x / iResolution.y;
-
-    // Create multiple aurora layers with varying colors, speeds, and intensities
-    vec3 color = vec3(0.0);
-    color += auroraLayer(uv, 0.05, 0.3, vec3(0.0, 1.0, 0.3));
-    color += auroraLayer(uv, 0.1, 0.4, vec3(0.1, 0.5, 0.9));
-    color += auroraLayer(uv, 0.15, 0.3, vec3(0.4, 0.1, 0.8));
-    color += auroraLayer(uv, 0.07, 0.2, vec3(0.8, 0.1, 0.6));
-
-    vec3 skyColor1 = vec3(0.2, 0.0, 0.4);
-    vec3 skyColor2 = vec3(0.15, 0.2, 0.35);
-    // Add a gradient to simulate the night sky
-    color += skyColor2 * (1.0 - smoothstep(1.0, 1.0, uv.y));
-    color += skyColor1 * (1.0 - smoothstep(0.0, 0.5, uv.y));
-
-    int numLayers = 5;
-    for (int i = 0; i < numLayers; i++) {
-        // Calculate the height of the mountain range
-        float height = float(numLayers-i) * 0.1
-        * smoothstep(1.0, 0.0,
-        mountainRange(
-        vec2(iTime * 0.03 * (float(i) + 1.0) + float(i) * 4.0, 0.0)
-        + uv * vec2( 1.0 + float(numLayers - i) * 0.05 , 0.23 )
-        )
-        );
-
-        // Create the black silhouette of the mountain range
-        float mountain = smoothstep(0.0, 0.0, height - uv.y);
-
-        // Combine the mountain range and sky
-        color = mix(color, skyColor2 * float(numLayers - i)/4.0, mountain);
+    
+    // Blue flag gradient - darker blue to lighter blue
+    vec3 skyTop = vec3(0.05, 0.15, 0.4);     // Dark blue
+    vec3 skyBottom = vec3(0.1, 0.3, 0.7);    // Medium blue
+    vec3 skyColor = mix(skyBottom, skyTop, smoothstep(0.0, 1.0, uv.y));
+    
+    // Add subtle stars with blue tint
+    float stars = 0.0;
+    for (int i = 0; i < 3; i++) {
+        vec2 starUV = uv * (50.0 + float(i) * 30.0);
+        stars += smoothstep(0.98, 1.0, hash2(floor(starUV))) * 0.1;
     }
-
-    fragColor = vec4(color, 1.0);
+    skyColor += stars * vec3(0.7, 0.8, 1.0);
+    
+    // Create blue aurora layers
+    vec3 auroraColor = vec3(0.0);
+    float timeOffset = iTime * 0.1;
+    
+    for (int i = 0; i < 4; i++) {
+        float layerTime = timeOffset + float(i) * 0.5;
+        vec3 color = getBlueColor(fract(layerTime));
+        float speed = 0.05 + float(i) * 0.02;
+        float intensity = 0.4 - float(i) * 0.08;
+        
+        auroraColor += blueAuroraLayer(uv, speed, intensity, color, float(i) * 10.0);
+    }
+    
+    // Final blue composition
+    vec3 finalColor = skyColor + auroraColor;
+    
+    // Enhance blue tones
+    finalColor.b *= 1.2; // Boost blue channel
+    finalColor = pow(finalColor, vec3(0.9)); // Gamma correction
+    finalColor *= 1.1; // Brightness boost
+    
+    fragColor = vec4(finalColor, 1.0);
 }
 
 void main() {

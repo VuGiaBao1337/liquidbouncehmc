@@ -74,11 +74,30 @@ object LiquidBounce {
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
     const val CLIENT_WEBSITE = "liquidbounce.net"
     const val CLIENT_GITHUB = "https://github.com/CCBlueX/LiquidBounce"
-
     const val MINECRAFT_VERSION = "1.8.9"
     
-    val clientVersionText = gitInfo["git.build.version"]?.toString() ?: "fuck skidder"
-    val clientVersionNumber = clientVersionText.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
+    // Safe version handling
+    val clientVersionText = run {
+        val version = gitInfo["git.build.version"]?.toString()
+        when {
+            version.isNullOrBlank() -> "b1"
+            else -> version
+        }
+    }
+    
+    val clientVersionNumber = run {
+        try {
+            if (clientVersionText.length > 1 && clientVersionText.startsWith("b")) {
+                clientVersionText.substring(1).toIntOrNull() ?: 1
+            } else {
+                1
+            }
+        } catch (e: Exception) {
+            LOGGER.warn("Failed to parse version number from '$clientVersionText', using default: 1")
+            1
+        }
+    }
+    
     val clientCommit = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "unknown"
 
@@ -101,7 +120,6 @@ object LiquidBounce {
 
     // HUD & ClickGUI
     val hud = HUD
-
     val clickGui = ClickGui
 
     // Menu Background
@@ -114,7 +132,6 @@ object LiquidBounce {
      * Start IO tasks
      */
     fun preload(): Future<*> {
-
         net.ccbluex.liquidbounce.utils.client.javaVersion
 
         // Change theme of Swing
@@ -142,7 +159,6 @@ object LiquidBounce {
                 loadSrg()
 
                 LOGGER.info("Preload tasks of $CLIENT_NAME are completed!")
-
                 future.complete(Unit)
             } catch (e: Exception) {
                 future.completeExceptionally(e)
@@ -254,6 +270,7 @@ object LiquidBounce {
 
             // Load background
             FileManager.loadBackground()
+
         } catch (e: Exception) {
             LOGGER.error("Failed to start client: ${e.message}")
             e.showErrorPopup()
@@ -285,5 +302,4 @@ object LiquidBounce {
         // Save all available configs
         saveAllConfigs()
     }
-
 }

@@ -26,20 +26,67 @@ import net.minecraft.client.gui.GuiOptions
 import net.minecraft.client.gui.GuiSelectWorld
 import net.minecraft.client.resources.I18n
 import org.lwjgl.input.Mouse
+import org.lwjgl.opengl.GL11.*
+import java.awt.Color
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.*
+import kotlin.random.Random
 
 class GuiMainMenu : AbstractScreen() {
-
+    
     private var popup: PopupScreen? = null
-
+    
+    // Morphing gradient animation system
+    private var animationTime = 0f
+    private var morphingSpeed = 0.008f
+    
+    // Gradient color sets for morphing - More vibrant colors
+    private val gradientSets = arrayOf(
+        // Set 1: Blue to Cyan
+        arrayOf(
+            Color(74, 144, 226),   // Light Blue
+            Color(56, 189, 248),   // Sky Blue
+            Color(34, 211, 238),   // Cyan
+            Color(6, 182, 212)     // Dark Cyan
+        ),
+        // Set 2: Cyan to Green
+        arrayOf(
+            Color(34, 211, 238),   // Cyan
+            Color(6, 182, 212),    // Dark Cyan
+            Color(16, 185, 129),   // Emerald
+            Color(34, 197, 94)     // Green
+        ),
+        // Set 7: Pink to Purple
+        arrayOf(
+            Color(236, 72, 153),   // Pink
+            Color(192, 132, 252),  // Light Purple
+            Color(147, 51, 234),   // Purple
+            Color(109, 40, 217)    // Deep Purple
+        ),
+        // Set 8: Purple to Blue (completing cycle)
+        arrayOf(
+            Color(147, 51, 234),   // Purple
+            Color(109, 40, 217),   // Deep Purple
+            Color(99, 102, 241),   // Indigo
+            Color(74, 144, 226)    // Back to Light Blue
+        )
+    )
+    
+    private var currentGradientIndex = 0
+    private var nextGradientIndex = 1
+    private var morphProgress = 0f
+    
+    // Gradient mesh points for smooth morphing
+    private val meshResolution = 20
+    private val gradientMesh = Array(meshResolution + 1) { Array(meshResolution + 1) { Color.WHITE } }
+    
     companion object {
         private var popupOnce = false
         var lastWarningTime: Long? = null
         private val warningInterval = TimeUnit.DAYS.toMillis(7)
-
         fun shouldShowWarning() = lastWarningTime == null || Instant.now().toEpochMilli() - lastWarningTime!! > warningInterval
     }
 
@@ -51,18 +98,13 @@ class GuiMainMenu : AbstractScreen() {
                     it.major > 8 -> showJava11Warning()
                 }
             }
-            when {
-                FileManager.firstStart -> showWelcomePopup()
-                hasUpdate() -> showUpdatePopup()
-                shouldShowWarning() -> showDiscontinuedWarning()
-            }
+
             popupOnce = true
         }
     }
 
     override fun initGui() {
         val defaultHeight = height / 4 + 48
-
         val baseCol1 = width / 2 - 100
         val baseCol2 = width / 2 + 2
 
@@ -72,15 +114,265 @@ class GuiMainMenu : AbstractScreen() {
         +GuiButton(102, baseCol2, defaultHeight + 24 * 2, 98, 20, translationMenu("configuration"))
         +GuiButton(101, baseCol1, defaultHeight + 24 * 3, 98, 20, translationMenu("serverStatus"))
         +GuiButton(108, baseCol2, defaultHeight + 24 * 3, 98, 20, translationMenu("contributors"))
-
         +GuiButton(1, baseCol1, defaultHeight, 98, 20, I18n.format("menu.singleplayer"))
         +GuiButton(2, baseCol2, defaultHeight, 98, 20, I18n.format("menu.multiplayer"))
-
-        // Minecraft Realms
-        //        +GuiButton(14, this.baseCol1, j + 24 * 2, I18n.format("menu.online"))
-
         +GuiButton(0, baseCol1, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.options"))
         +GuiButton(4, baseCol2, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.quit"))
+    }
+
+    private fun updateMorphingGradient() {
+        animationTime += morphingSpeed
+        morphProgress += 0.01f
+        
+        // Switch to next gradient set when morph is complete
+        if (morphProgress >= 1f) {
+            morphProgress = 0f
+            currentGradientIndex = nextGradientIndex
+            nextGradientIndex = (nextGradientIndex + 1) % gradientSets.size
+        }
+        
+        // Update gradient mesh with morphed colors
+        updateGradientMesh()
+    }
+
+    private fun updateGradientMesh() {
+        val currentSet = gradientSets[currentGradientIndex]
+        val nextSet = gradientSets[nextGradientIndex]
+        
+        for (x in 0..meshResolution) {
+            for (y in 0..meshResolution) {
+                val xRatio = x.toFloat() / meshResolution
+                val yRatio = y.toFloat() / meshResolution
+                
+                // Add noise for organic movement
+                val noiseX = sin(animationTime * 0.5f + xRatio * 4f + yRatio * 2f) * 0.1f
+                val noiseY = cos(animationTime * 0.7f + xRatio * 3f + yRatio * 4f) * 0.1f
+                
+                val adjustedX = (xRatio + noiseX).coerceIn(0f, 1f)
+                val adjustedY = (yRatio + noiseY).coerceIn(0f, 1f)
+                
+                // Interpolate between 4 corner colors
+                val currentColor = interpolateGradientColors(currentSet, adjustedX, adjustedY)
+                val nextColor = interpolateGradientColors(nextSet, adjustedX, adjustedY)
+                
+                // Morph between current and next color
+                gradientMesh[x][y] = morphColors(currentColor, nextColor, morphProgress)
+            }
+        }
+    }
+
+    private fun interpolateGradientColors(colorSet: Array<Color>, x: Float, y: Float): Color {
+        // Bilinear interpolation between 4 corner colors
+        val topLeft = colorSet[0]
+        val topRight = colorSet[1]
+        val bottomLeft = colorSet[2]
+        val bottomRight = colorSet[3]
+        
+        // Interpolate top edge
+        val topColor = interpolateColors(topLeft, topRight, x)
+        // Interpolate bottom edge
+        val bottomColor = interpolateColors(bottomLeft, bottomRight, x)
+        // Interpolate between top and bottom
+        return interpolateColors(topColor, bottomColor, y)
+    }
+
+    private fun interpolateColors(color1: Color, color2: Color, ratio: Float): Color {
+        val r = (color1.red + (color2.red - color1.red) * ratio).toInt().coerceIn(0, 255)
+        val g = (color1.green + (color2.green - color1.green) * ratio).toInt().coerceIn(0, 255)
+        val b = (color1.blue + (color2.blue - color1.blue) * ratio).toInt().coerceIn(0, 255)
+        return Color(r, g, b)
+    }
+
+    private fun morphColors(color1: Color, color2: Color, progress: Float): Color {
+        // Smooth morphing with easing
+        val easedProgress = easeInOutCubic(progress)
+        return interpolateColors(color1, color2, easedProgress)
+    }
+
+    private fun easeInOutCubic(t: Float): Float {
+        return if (t < 0.5f) {
+            4f * t * t * t
+        } else {
+            1f - (-2f * t + 2f).pow(3) / 2f
+        }
+    }
+
+    private fun drawMorphingGradientBackground() {
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glShadeModel(GL_SMOOTH)
+        
+        // Update morphing animation
+        updateMorphingGradient()
+        
+        // Draw clean gradient mesh only
+        drawGradientMesh()
+        
+        glShadeModel(GL_FLAT)
+        glEnable(GL_TEXTURE_2D)
+    }
+
+    private fun drawGradientMesh() {
+        val stepX = width.toFloat() / meshResolution
+        val stepY = height.toFloat() / meshResolution
+        
+        for (x in 0 until meshResolution) {
+            for (y in 0 until meshResolution) {
+                val x1 = x * stepX
+                val y1 = y * stepY
+                val x2 = (x + 1) * stepX
+                val y2 = (y + 1) * stepY
+                
+                // Get colors for quad corners
+                val color1 = gradientMesh[x][y]
+                val color2 = gradientMesh[x + 1][y]
+                val color3 = gradientMesh[x + 1][y + 1]
+                val color4 = gradientMesh[x][y + 1]
+                
+                // Draw quad with smooth color interpolation
+                glBegin(GL_QUADS)
+                
+                glColor3f(color1.red / 255f, color1.green / 255f, color1.blue / 255f)
+                glVertex2f(x1, y1)
+                
+                glColor3f(color2.red / 255f, color2.green / 255f, color2.blue / 255f)
+                glVertex2f(x2, y1)
+                
+                glColor3f(color3.red / 255f, color3.green / 255f, color3.blue / 255f)
+                glVertex2f(x2, y2)
+                
+                glColor3f(color4.red / 255f, color4.green / 255f, color4.blue / 255f)
+                glVertex2f(x1, y2)
+                
+                glEnd()
+            }
+        }
+    }
+
+
+
+    // Rainbow text effect
+    private fun getRainbowColor(offset: Float = 0f): Color {
+        val hue = ((System.currentTimeMillis() * 0.001f + offset) % 6f) / 6f
+        return Color.getHSBColor(hue, 0.8f, 1f)
+    }
+
+    // Pulsing effect
+    private fun getPulsingAlpha(): Float {
+        return 0.7f + sin(animationTime * 4f) * 0.3f
+    }
+
+    // Wave effect for text
+    private fun getWaveOffset(index: Int): Float {
+        return sin(animationTime * 3f + index * 0.5f) * 3f
+    }
+
+    private fun drawTitleWithGlow() {
+        val titleX = width / 2f
+        val titleY = height / 8f
+        val titleText = "Rinbounce"
+        
+        // Beautiful white color instead of cyan
+        val whiteColor = Color(255, 255, 255) // Pure white
+        val grayColor = Color(200, 200, 200)  // Light gray for depth
+
+        // Multi-layer glow effect with white
+        for (i in 1..6) {
+            val glowAlpha = (0.4f - i * 0.06f) * getPulsingAlpha()
+            val glowOffset = i * 2f
+
+            Fonts.fontBold180.drawCenteredString(
+                titleText, 
+                titleX + glowOffset, titleY + glowOffset, 
+                Color(whiteColor.red, whiteColor.green, whiteColor.blue, (glowAlpha * 255).toInt()).rgb, 
+                false
+            )
+        }
+
+        // Shadow effect with gray
+        Fonts.fontBold180.drawCenteredString(
+            titleText, titleX + 3, titleY + 3, 
+            Color(grayColor.red, grayColor.green, grayColor.blue, 120).rgb, false
+        )
+
+        // Main white text with wave effect
+        val totalWidth = Fonts.fontBold180.getStringWidth(titleText)
+        var currentX = titleX - (totalWidth / 2f)
+
+        for (i in titleText.indices) {
+            val char = titleText[i].toString()
+            val charWidth = Fonts.fontBold180.getStringWidth(char)
+            val charY = titleY + getWaveOffset(i)
+
+            // Pulsing white color
+            val pulseIntensity = getPulsingAlpha()
+            val finalWhite = Color(
+                (whiteColor.red * pulseIntensity).toInt().coerceIn(200, 255),
+                (whiteColor.green * pulseIntensity).toInt().coerceIn(200, 255),
+                (whiteColor.blue * pulseIntensity).toInt().coerceIn(200, 255),
+                255
+            )
+
+            Fonts.fontBold180.drawString(
+                char, currentX, charY,
+                finalWhite.rgb, true
+            )
+
+            currentX += charWidth
+        }
+
+        // Sparkle effects around title with white color
+        drawWhiteSparkleEffects(titleX, titleY, titleText)
+
+        // Version text with white
+        val versionAlpha = 0.8f + sin(animationTime * 2f) * 0.2f
+        Fonts.fontSemibold35.drawCenteredString(
+            clientVersionText,
+            titleX + 148, titleY + Fonts.fontSemibold35.fontHeight,
+            Color(whiteColor.red, whiteColor.green, whiteColor.blue, (versionAlpha * 255).toInt()).rgb, true
+        )
+    }
+
+    private fun drawWhiteSparkleEffects(titleX: Float, titleY: Float, titleText: String) {
+        val titleWidth = Fonts.fontBold180.getStringWidth(titleText)
+        val titleHeight = Fonts.fontBold180.fontHeight
+        val whiteColor = Color(255, 255, 255)
+        val lightGray = Color(240, 240, 240)
+        
+        // Generate sparkles around title
+        for (i in 0..8) {
+            val sparkleTime = animationTime * 2f + i * 0.8f
+            val sparkleAlpha = (sin(sparkleTime) * 0.5f + 0.5f) * 0.8f
+
+            if (sparkleAlpha > 0.3f) {
+                val sparkleX = titleX + sin(sparkleTime * 0.7f) * (titleWidth * 0.6f)
+                val sparkleY = titleY + cos(sparkleTime * 0.9f) * (titleHeight * 0.8f)
+                val sparkleSize = 2f + sin(sparkleTime * 1.5f) * 1f
+                val sparkleColor = if (i % 2 == 0) whiteColor else lightGray
+            
+                // Draw sparkle
+                glDisable(GL_TEXTURE_2D)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            
+                glColor4f(
+                    sparkleColor.red / 255f, 
+                    sparkleColor.green / 255f, 
+                    sparkleColor.blue / 255f, 
+                    sparkleAlpha
+                )
+            
+                glBegin(GL_QUADS)
+                glVertex2f(sparkleX - sparkleSize, sparkleY - sparkleSize)
+                glVertex2f(sparkleX + sparkleSize, sparkleY - sparkleSize)
+                glVertex2f(sparkleX + sparkleSize, sparkleY + sparkleSize)
+                glVertex2f(sparkleX - sparkleSize, sparkleY + sparkleSize)
+                glEnd()
+            
+                glEnable(GL_TEXTURE_2D)
+            }
+        }
     }
 
     private fun showWelcomePopup() {
@@ -88,16 +380,16 @@ class GuiMainMenu : AbstractScreen() {
             title("§a§lWelcome!")
             message("""
                 §eThank you for downloading and installing §bLiquidBounce§e!
-        
+                
                 §6Here is some information you might find useful:§r
                 §a- §fClickGUI:§r Press §7[RightShift]§f to open ClickGUI.
                 §a- §fRight-click modules with a '+' to edit.
                 §a- §fHover over a module to see its description.
-        
+                
                 §6Important Commands:§r
                 §a- §f.bind <module> <key> / .bind <module> none
                 §a- §f.config load <name> / .config list
-        
+                
                 §bNeed help? Contact us!§r
                 - §fYouTube: §9https://youtube.com/ccbluex
                 - §fTwitter: §9https://twitter.com/ccbluex
@@ -108,66 +400,8 @@ class GuiMainMenu : AbstractScreen() {
         }
     }
 
-    private fun showUpdatePopup() {
-        val newestVersion = ClientUpdate.newestVersion ?: return
 
-        val isReleaseBuild = newestVersion.release
-        val updateType = if (isReleaseBuild) "version" else "development build"
 
-        val dateFormatter = SimpleDateFormat("EEEE, MMMM dd, yyyy, h a z", Locale.ENGLISH)
-        val newestVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
-        val formattedNewestDate = dateFormatter.format(newestVersionDate)
-
-        popup = PopupScreen {
-            title("§bNew Update Available!")
-            message("""
-                §eA new $updateType of LiquidBounce is available!
-        
-                - ${if (isReleaseBuild) "§aVersion" else "§aBuild ID"}:§r ${if (isReleaseBuild) newestVersion.lbVersion else newestVersion.buildId}
-                - §aMinecraft Version:§r ${newestVersion.mcVersion}
-                - §aBranch:§r ${newestVersion.branch}
-                - §aDate:§r $formattedNewestDate
-        
-                §6Changes:§r
-                ${newestVersion.message}
-        
-                §bUpgrade now to enjoy the latest features and improvements!§r
-            """.trimIndent())
-            button("§aDownload") { MiscUtils.showURL(newestVersion.url) }
-            onClose { popup = null }
-        }
-    }
-
-    private fun showDiscontinuedWarning() {
-        popup = PopupScreen {
-            title("§c§lUnsupported version")
-            message("""
-                §6§lThis version is discontinued and unsupported.§r
-                
-                §eWe strongly recommend switching to §bLiquidBounce Nextgen§e, 
-                which offers the following benefits:
-                
-                §a- §fSupports all Minecraft versions from §71.7§f to §71.21+§f.
-                §a- §fFrequent updates with the latest bypasses and features.
-                §a- §fActive development and official support.
-                §a- §fImproved performance and compatibility.
-                
-                §cWhy upgrade?§r
-                - No new bypasses or features will be introduced in this version.
-                - Auto config support will not be actively maintained.
-                - Unofficial forks of this version are discouraged as they lack the full feature set of Nextgen and cannot be trusted.
-        
-                §9Upgrade to LiquidBounce Nextgen today for a better experience!§r
-            """.trimIndent())
-            button("§aDownload Nextgen") { MiscUtils.showURL("https://liquidbounce.net/download") }
-            button("§eInstallation Tutorial") { MiscUtils.showURL("https://www.youtube.com/watch?v=i_r1i4m-NZc") }
-            onClose {
-                popup = null
-                lastWarningTime = Instant.now().toEpochMilli()
-                FileManager.saveConfig(valuesConfig)
-            }
-        }
-    }
 
     private fun showOutdatedJava8Warning() {
         popup = PopupScreen {
@@ -199,29 +433,16 @@ class GuiMainMenu : AbstractScreen() {
         }
     }
 
-
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        drawBackground(0)
-
-        drawRoundedBorderRect(
-            width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175,
-            2f,
-            Integer.MIN_VALUE,
-            Integer.MIN_VALUE,
-            3F
-        )
-
-        Fonts.fontBold180.drawCenteredString(CLIENT_NAME, width / 2F, height / 8F, 4673984, true)
-        Fonts.fontSemibold35.drawCenteredString(
-            clientVersionText,
-            width / 2F + 148,
-            height / 8F + Fonts.fontSemibold35.fontHeight,
-            0xffffff,
-            true
-        )
-
+        // Draw morphing gradient background
+        drawMorphingGradientBackground()
+        
+        
+        // Draw title with enhanced glow effect
+        drawTitleWithGlow()
+        
         super.drawScreen(mouseX, mouseY, partialTicks)
-
+        
         if (popup != null) {
             popup!!.drawScreen(width, height, mouseX, mouseY)
         }
@@ -232,7 +453,6 @@ class GuiMainMenu : AbstractScreen() {
             popup!!.mouseClicked(mouseX, mouseY, mouseButton)
             return
         }
-
         super.mouseClicked(mouseX, mouseY, mouseButton)
     }
 
@@ -240,7 +460,6 @@ class GuiMainMenu : AbstractScreen() {
         if (popup != null) {
             return
         }
-
         when (button.id) {
             0 -> mc.displayGuiScreen(GuiOptions(this, mc.gameSettings))
             1 -> mc.displayGuiScreen(GuiSelectWorld(this))
@@ -262,7 +481,6 @@ class GuiMainMenu : AbstractScreen() {
                 popup!!.handleMouseWheel(eventDWheel)
             }
         }
-
         super.handleMouseInput()
     }
 }
