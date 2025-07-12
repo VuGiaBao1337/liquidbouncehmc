@@ -5,24 +5,35 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.ui.client.hud.ModernHUD
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element.Companion.MAX_GRADIENT_COLORS
 import net.ccbluex.liquidbounce.utils.render.ColorSettingsFloat
 import net.ccbluex.liquidbounce.utils.render.ColorSettingsInteger
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiChat
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
+import net.minecraftforge.client.event.RenderGameOverlayEvent
+import net.minecraftforge.fml.common.eventhandler.EventPriority
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
 object HUD : Module("HUD", Category.RENDER, gameDetecting = false, defaultState = true, defaultHidden = true) {
     val customHotbar by boolean("CustomHotbar", true)
-
     val smoothHotbarSlot by boolean("SmoothHotbarSlot", true) { customHotbar }
-
     val roundedHotbarRadius by float("RoundedHotbar-Radius", 3F, 0F..5F) { customHotbar }
+
+    val modernHud by boolean("ModernHud", true)
+    val modernHudDetail by boolean("ModernHud-Detail", true) { modernHud }
+    val barSpacing by int("BarSpacing", 4, 0..20) { modernHud }
+    val smoothSpeed = 1F
+
 
     val hotbarMode by choices("Hotbar-Color", arrayOf("Custom", "Rainbow", "Gradient"), "Custom") { customHotbar }
     val hbHighlightColors = ColorSettingsInteger(this, "Hotbar-Highlight-Colors", applyMax = true)
@@ -51,13 +62,80 @@ object HUD : Module("HUD", Category.RENDER, gameDetecting = false, defaultState 
     private val blur by boolean("Blur", false)
     private val fontChat by boolean("FontChat", false)
 
-    val onRender2D = handler<Render2DEvent> {
-        if (mc.currentScreen is GuiHudDesigner)
-            return@handler
+    val hud = LiquidBounce.hud //Nho Bien Nay !
 
+    val barWidth by int("BarWidth", 86, 40..200) { modernHud }
+    val barHeight by int("BarHeight", 9, 4..30) { modernHud }
+    val barRadius by float("BarRadius", 5f, 0f..20f) { modernHud }
+    val barAlpha by int("BarAlpha", 180, 0..255) { modernHud }
+    val iconSize by int("IconSize", 11, 8..40) { modernHud }
+    private val modernHud_render: ModernHUD
+        get() = ModernHUD(
+            barWidth = barWidth,
+            barHeight = barHeight,
+            barRadius = barRadius,
+            barAlpha = barAlpha,
+            iconSize = iconSize,
+            detail = modernHudDetail
+        )
+
+    val onRender2D = handler<Render2DEvent> {
+        if (mc.currentScreen is GuiHudDesigner) return@handler
+        if (!modernHud) {
+            hud.render(false)
+            return@handler
+        }
+
+        val mc = Minecraft.getMinecraft()
+        val sr = ScaledResolution(mc)
+        val screenWidth = sr.scaledWidth
+        val screenHeight = sr.scaledHeight
+        val player = mc.thePlayer ?: return@handler
+
+        val bar = modernHud_render
+
+        val centerX = screenWidth / 2
+        val baseY = screenHeight - 52
+        val healthX = centerX - 91
+        val foodX = centerX + 91 - bar.barWidth
+        val expBarY = baseY + bar.barHeight + barSpacing + 4
+        val expBarX = healthX
+        val expBarWidth = (foodX + bar.barWidth) - healthX
+        bar.drawExpBar(expBarX, expBarY, expBarWidth)
+        var leftY = expBarY - bar.barHeight - barSpacing
+        bar.drawHealthBar(healthX, leftY)
+        if (player.absorptionAmount > 0f) {
+            leftY -= bar.barHeight + barSpacing
+            bar.drawAbsorptionBar(healthX, leftY)
+        }
+        if (player.totalArmorValue > 0) {
+            leftY -= bar.barHeight + barSpacing
+            bar.drawArmorBar(healthX, leftY)
+        }
+        var rightY = expBarY - bar.barHeight - barSpacing
+        bar.drawFoodBar(foodX, rightY)
+        if (player.air < 300) {
+            rightY -= bar.barHeight + barSpacing
+            bar.drawAirBar(foodX, rightY)
+        }
         hud.render(false)
     }
 
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    fun onRenderOverlay(event: RenderGameOverlayEvent.Pre) {
+        if (!modernHud) return
+
+        when (event.type) {
+            RenderGameOverlayEvent.ElementType.HEALTH,
+            RenderGameOverlayEvent.ElementType.ARMOR,
+            RenderGameOverlayEvent.ElementType.FOOD,
+            RenderGameOverlayEvent.ElementType.EXPERIENCE,
+            RenderGameOverlayEvent.ElementType.AIR -> {
+                event.isCanceled = true
+            }
+            else -> {}
+        }
+    }
     val onUpdate = handler<UpdateEvent> {
         hud.update()
     }
