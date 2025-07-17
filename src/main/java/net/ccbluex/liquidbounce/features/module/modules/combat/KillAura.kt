@@ -81,6 +81,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
     private val simulateCooldown by boolean("SimulateCooldown", false)
     private val simulateDoubleClicking by boolean("SimulateDoubleClicking", false) { !simulateCooldown }
+    
+    // Remove Reduce Damage
+    private val removeReduceDmgEnabled by boolean("RemoveReduceDmg", false)
+    private val removeReduceDmgDelay by int("RemoveReduceDmgDelay", 0, 0..100) { removeReduceDmgEnabled }
+    private var lastAttackTime = 0L
+    private var blockReleasedAt = 0L
 
     // CPS - Attack speed
     private val cps by intRange("CPS", 5..8, 1..50) { !simulateCooldown }.onChanged {
@@ -1185,6 +1191,24 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     val onPacket = handler<PacketEvent> { event ->
         val player = mc.thePlayer ?: return@handler
         val packet = event.packet
+        
+        if (removeReduceDmgEnabled && packet is C02PacketUseEntity && packet.action == C02PacketUseEntity.Action.ATTACK) {
+            val now = System.currentTimeMillis()
+
+            if (now - lastAttackTime < removeReduceDmgDelay) return@handler
+            lastAttackTime = now
+
+            if (player.isBlocking) {
+                sendPacket(
+                    C07PacketPlayerDigging(
+                        C07PacketPlayerDigging.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
+                        EnumFacing.DOWN
+                    ), false
+                )
+                blockReleasedAt = now
+            }
+        }
 
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked) return@handler
 
