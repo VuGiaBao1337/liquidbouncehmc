@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.utils.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickedActions.nextTick
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
+import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.enchantment.EnchantmentHelper
@@ -84,9 +85,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     
     // Remove Reduce Damage
     private val removeReduceDmgEnabled by boolean("RemoveReduceDmg", false)
-    private val removeReduceDmgDelay by int("RemoveReduceDmgDelay", 0, 0..100) { removeReduceDmgEnabled }
-    private var lastAttackTime = 0L
-    private var blockReleasedAt = 0L
 
     // CPS - Attack speed
     private val cps by intRange("CPS", 5..8, 1..50) { !simulateCooldown }.onChanged {
@@ -1191,12 +1189,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     val onPacket = handler<PacketEvent> { event ->
         val player = mc.thePlayer ?: return@handler
         val packet = event.packet
-        
-        if (removeReduceDmgEnabled && packet is C02PacketUseEntity && packet.action == C02PacketUseEntity.Action.ATTACK) {
-            val now = System.currentTimeMillis()
 
-            if (now - lastAttackTime < removeReduceDmgDelay) return@handler
-            lastAttackTime = now
+        if (removeReduceDmgEnabled && packet is C02PacketUseEntity && packet.action == C02PacketUseEntity.Action.ATTACK) {
+            val target = packet.getEntityFromWorld(mc.theWorld) ?: return@handler
 
             if (player.isBlocking) {
                 sendPacket(
@@ -1206,9 +1201,18 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                         EnumFacing.DOWN
                     ), false
                 )
-                blockReleasedAt = now
+
+                val reach = player.getDistanceToEntity(target)
+                if (reach > 3.1) {
+                    sendPacket(
+                        C03PacketPlayer(player.onGround), false
+                    )
+                }
+
+                if (reach > 4.5) Thread.sleep(1)
             }
         }
+
 
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked) return@handler
 
