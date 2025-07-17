@@ -243,7 +243,7 @@ class GuiMainMenu : AbstractScreen() {
 
         // b1.0.1 in top left corner (white color)
         mc.fontRendererObj.drawStringWithShadow(
-            "b1.1.6",
+            "b1.1.7",
             10f,
             10f,
             0xFFFFFF // White color

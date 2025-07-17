@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffolds
 
@@ -78,6 +78,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I) {
     val scaffoldMode by choices(
         "ScaffoldMode", arrayOf("Normal", "Rewinside", "Expand", "Telly", "GodBridge", "Breezily"), "Normal"
     )
+
+    // GodBridge specific settings
+    private val godBridgeMode by choices("GodBridgeMode", arrayOf("Advanced", "Safe", "Fast"), "Advanced") { scaffoldMode == "GodBridge" }
+    private val safetyCheck by boolean("SafetyCheck", true) { scaffoldMode == "GodBridge" }
+    private val autoCenter by boolean("AutoCenter", true) { scaffoldMode == "GodBridge" }
+    private val adaptiveSpeed by boolean("AdaptiveSpeed", true) { scaffoldMode == "GodBridge" }
+    private val smartPitch by boolean("SmartPitch", true) { scaffoldMode == "GodBridge" }
 
     // HMCBlinkFly
     private val hmcBlinkFlyEnabled by boolean("HMCBlinkFly", false)
@@ -368,7 +375,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I) {
 
             val directionDegree = MovementUtils.direction.toDegreesF()
 
-            // Round the direction rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
+            // Round the direction rotation to the nearest multiple of 45 degrees
             val yaw = round(abs(MathHelper.wrapAngleTo180_float(directionDegree)) / 45f) * 45f
 
             val isYawDiagonal = yaw % 90 != 0f
@@ -377,6 +384,54 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I) {
 
             return isYawDiagonal && (isMovingDiagonal || isStrafing)
         }
+
+    /**
+     * Checks if the player is in a safe position for god bridging
+     */
+    private fun isPlayerSafeForGodBridge(): Boolean {
+        val player = mc.thePlayer ?: return false
+        
+        if (blocksAmount() < 2) return false
+        
+        if (!player.onGround) return false
+        
+        val pos = player.position
+        val world = mc.theWorld ?: return false
+        
+        val blockBelow = world.getBlockState(pos.down())
+        if (blockBelow.block == air) return false
+        
+        return true
+    }
+
+    /**
+     * Calculate optimal side for god bridging based on position and movement
+     */
+    private fun calculateGodBridgeSide(movingYaw: Float): Float {
+        val player = mc.thePlayer ?: return 0f
+        
+        if (!player.onGround) return if (isOnRightSide) 45f else -45f
+        
+        val posX = -sin(movingYaw.toRadians()).toDouble()
+        val posZ = cos(movingYaw.toRadians()).toDouble()
+        
+        val shouldSwitchSide = run {
+            val nextPos = BlockPos(
+                player.posX + posX * 0.6,
+                player.posY - 1.0,
+                player.posZ + posZ * 0.6
+            )
+            
+            val currentBlock = mc.theWorld.getBlockState(player.position.down()).block == air
+            val nextBlock = mc.theWorld.getBlockState(nextPos).block == air
+            
+            currentBlock && nextBlock
+        }
+        
+        if (shouldSwitchSide) isOnRightSide = !isOnRightSide
+        
+        return if (isOnRightSide) 45f else -45f
+    }
 
     // Telly
     private var ticksUntilJump = 0

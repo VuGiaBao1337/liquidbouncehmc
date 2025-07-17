@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce
 
@@ -89,7 +89,7 @@ object LiquidBounce {
      */
     const val IN_DEV = false
 
-    val clientTitle = CLIENT_NAME + clientVersionText + " ( Main ) | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
+    val clientTitle = CLIENT_NAME +  clientVersionText + " ( Main ) | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
 
     var isStarting = true
 

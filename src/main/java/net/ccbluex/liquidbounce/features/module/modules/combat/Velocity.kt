@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
@@ -54,14 +54,10 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "Reverse", "SmoothReverse", "JumpReset", "Glitch", "Legit",
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce", 
             "Delay", "Hypixel", "HypixelAir",
-            "Click", "BlocksMC", "3FMC", "GrimReduce", "Intave",
+            "Click", "BlocksMC", "3FMC", "GrimReduce", "Intave", 
             "Grim"
         ), "Simple"
     )
-
-    // IntaveReduce
-    private val reduceFactor by float("IntaveReduceFactor", 0.6f, 0f..1f) { mode == "IntaveReduce" }
-    private val hurtTime by int("IntaveHurtTime", 3, 0..10) { mode == "IntaveReduce" }
 
     // GrimReduce
     private val GrimReduceFactor by float("GrimReduceFactor", 0.6f, 0f..1f) { mode == "GrimReduce" }
@@ -116,12 +112,10 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     // Intave 
     private val intaveJump by boolean("IntaveJump", true) { mode == "Intave" }
-    private val intaveJumpDelay by int("JumpDelay", 10, 0..20) { mode == "Intave" && intaveJump }
     private val intaveJumpChance by int("JumpChance", 100, 0..100) { mode == "Intave" && intaveJump }
-    
-    private val intaveReduceFactor by float("IntaveReduceFactor", 0.6f, 0f..1f) { mode == "Intave" }
-    private val intaveReduceDelay by int("IntaveReduceDelay", 10, 0..20) { mode == "Intave" }
-    private val intaveReduceChance by int("IntaveReduceChance", 100, 0..100) { mode == "Intave" }
+    private val intaveTicksUntilJump by int("TicksUntilJump", 4, 0..20) { mode == "Intave" && intaveJump }
+    private val intaveReceivedHitsUntilJump by int("ReceivedHitsUntilJump", 2, 0..5) { mode == "Intave" && intaveJump }
+    private val intaveJumpCooldownMode by choices("JumpCooldownMode", arrayOf("Ticks", "ReceivedHits"), "Ticks") { mode == "Intave" && intaveJump }
 
     // GrimReduce
     private val grimReduceTicks by int("GrimReduceTicks", 4, 1..10) { mode == "grimreduce" }
@@ -183,11 +177,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     // Jump
     private var limitUntilJump = 0
 
-    // IntaveReduce
-    private var intaveTick = 0
-    private var lastAttackTime = 0L
-    private var intaveDamageTick = 0
-
     // Delay
     private val packets = LinkedHashMap<Packet<*>, Long>()
 
@@ -237,23 +226,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
                     thePlayer.motionZ *= GrimReduceFactor
                     
                     if (GrimOnGround && !thePlayer.onGround) {
-                        hasReceivedVelocity = false
-                    }
-                }
-            }
-            
-            "intavetest" -> {
-                if (hasReceivedVelocity) {
-                    intaveTick++
-                    if (thePlayer.hurtTime == 2) {
-                        intaveDamageTick++
-                        if (thePlayer.onGround && intaveTick % 2 == 0 && intaveDamageTick <= 10) {
-                            thePlayer.jump()
-                            intaveTick = 0
-                            
-                            thePlayer.motionX *= reduceFactor
-                            thePlayer.motionZ *= reduceFactor
-                        }
                         hasReceivedVelocity = false
                     }
                 }
@@ -467,19 +439,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         }
     }
 
-    val onAttack = handler<AttackEvent> {
-        val player = mc.thePlayer ?: return@handler
-
-        if (mode != "IntaveReduce" || !hasReceivedVelocity) return@handler
-
-        if (player.hurtTime == hurtTime && System.currentTimeMillis() - lastAttackTime <= 8000) {
-            player.motionX *= reduceFactor
-            player.motionZ *= reduceFactor
-        }
-
-        lastAttackTime = System.currentTimeMillis()
-    }
-
     private fun checkAir(blockPos: BlockPos): Boolean {
         val world = mc.theWorld ?: return false
 
@@ -547,71 +506,26 @@ object Velocity : Module("Velocity", Category.COMBAT) {
                 pauseTicks = ticksToPause
             }
 
-            when (mode.lowercase()) {
+                when (mode.lowercase()) {
                 "simple" -> handleVelocity(event)
 
-                "aac", "reverse", "smoothreverse", "aaczero", "ghostblock", "intavereduce" -> hasReceivedVelocity = true
-
-                "jumpreset" -> {
-                    // TODO: Recode and make all velocity modes support velocity direction checks
-                    var packetDirection = 0.0
-                    when (packet) {
-                        is S12PacketEntityVelocity -> {
-                            if (packet.entityID != thePlayer.entityId) return@handler
-
-                            val motionX = packet.motionX.toDouble()
-                            val motionZ = packet.motionZ.toDouble()
-
-                            packetDirection = atan2(motionX, motionZ)
-                        }
-
-                        is S27PacketExplosion -> {
-                            val motionX = thePlayer.motionX + packet.field_149152_f
-                            val motionZ = thePlayer.motionZ + packet.field_149159_h
-
-                            packetDirection = atan2(motionX, motionZ)
-                        }
-                    }
-                    val degreePlayer = getDirection()
-                    val degreePacket = Math.floorMod(Math.toDegrees(packetDirection).toInt(), 360).toDouble()
-                    var angle = abs(degreePacket + degreePlayer)
-                    val threshold = 120.0
-                    angle = Math.floorMod(angle.toInt(), 360).toDouble()
-                    val inRange = angle in 180 - threshold / 2..180 + threshold / 2
-                    if (inRange)
-                        hasReceivedVelocity = true
+                "aac", "reverse", "smoothreverse", "aaczero", "ghostblock" -> hasReceivedVelocity = true            "jumpreset" -> {
+                if (packet is S12PacketEntityVelocity && packet.entityID == thePlayer.entityId) {
+                    hasReceivedVelocity = true
                 }
-
-                "intave" -> {
+            }                "intave" -> {
                     if (packet is S12PacketEntityVelocity && packet.entityID == thePlayer.entityId) {
                         if (intaveSmart) {
                             if (!intaveSmartInAir && !thePlayer.onGround) return@handler
                             if (thePlayer.fallDistance > intaveSmartFallDistance) return@handler
                         }
 
-                        // Jump functionality
-                        if (intaveJump && thePlayer.onGround && thePlayer.hurtTime == intaveJumpDelay) {
-                            if (nextInt(endExclusive = 100) <= intaveJumpChance) {
-                                thePlayer.jump()
-                            }
+                        if (intaveJump && thePlayer.onGround && thePlayer.hurtTime >= 9 && nextInt(endExclusive = 100) <= intaveJumpChance) {
+                            thePlayer.tryJump()
                         }
 
-                        // Apply reduction
-                        if (nextInt(endExclusive = 100) <= intaveReduceChance) {
-                            hasReceivedVelocity = true
-                            intaveTick = 0
-                            
-                            if (thePlayer.onGround) {
-                                packet.motionX = (packet.getMotionX() * intaveReduceFactor).toInt()
-                                packet.motionZ = (packet.getMotionZ() * intaveReduceFactor).toInt()
-                            }
-                            
-                            if (thePlayer.hurtTime <= intaveReduceDelay) {
-                                packet.motionX = (packet.getMotionX() * intaveReduceFactor).toInt()
-                                packet.motionZ = (packet.getMotionZ() * intaveReduceFactor).toInt()
-                                packet.motionY = (packet.getMotionY() * intaveReduceFactor).toInt()
-                            }
-                        }
+                        hasReceivedVelocity = false
+                        event.cancelEvent()
                     }
                 }
                 
@@ -839,11 +753,8 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         val player = mc.thePlayer ?: return@handler
 
         if (mode == "jumpreset" && hasReceivedVelocity) {
-            if (!player.isJumping && nextInt(endExclusive = 100) < chance && shouldJump() && player.onGround && player.hurtTime > 0) {
+            if (player.onGround && player.hurtTime >= 9 && nextInt(endExclusive = 100) < chance) {
                 player.tryJump()
-                player.motionX *= 0.6
-                player.motionZ *= 0.6
-                limitUntilJump = 0
             }
             hasReceivedVelocity = false
             return@handler

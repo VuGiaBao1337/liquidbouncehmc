@@ -48,7 +48,10 @@ object Animations : Module("Animations", Category.RENDER, gameDetecting = false)
         HeliumAnimation(),
         ArgonAnimation(),
         CesiumAnimation(),
-        SulfurAnimation()
+        SulfurAnimation(),
+        SmoothFloatAnimation(),
+        ReverseAnimation(),
+        FluxAnimation()
     )
 
     private val animationMode by choices("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
@@ -308,6 +311,80 @@ class SulfurAnimation : Animation("Sulfur") {
         rotate(-c5 * 30.0f, c5 / 10.0f, c6 / 10.0f, 0.0f)
         translate(c5 / 1.5, 0.2, 0.0)
         doBlockTransformations()
+        if (itemRotate) {
+            itemRenderRotate()
+        }
+    }
+}
+
+/**
+ * SmoothFloat animation.
+ * @author MinusBounce
+ */
+class SmoothFloatAnimation : Animation("SmoothFloat") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        val smoothSpeed = itemRotateSpeed * 0.7f
+        val progress = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        
+        transformFirstPersonItem(f / 3f, 0f)
+        
+        rotate(progress * 20f / smoothSpeed, 1f, -0.5f, 0.1f)
+        rotate(progress * 40f, 0.2f, 0.5f, 0.1f)
+        rotate(-progress * 20f, 1f, -0.3f, 0.7f)
+        
+        translate(0.1f, -0.1f, -0.2f)
+        doBlockTransformations()
+        
+        rotate(progress * 20f, 0f, 1f, 0f)
+        
+        if (itemRotate) {
+            itemRenderRotate()
+        }
+    }
+}
+
+/**
+ * Reverse animation.
+ * @author MinusBounce
+ */
+class ReverseAnimation : Animation("Reverse") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        val progress = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        
+        transformFirstPersonItem(f, 0f)
+        translate(0.0f, 0.3f, -0.4f)
+        rotate(progress * -30f, 1f, 0f, 2f)
+        rotate(progress * -20f, 0f, 1f, 0f)
+        rotate(-progress * 20f, 0f, 0f, 1f)
+        
+        scale(0.4f, 0.4f, 0.4f)
+        doBlockTransformations()
+        
+        if (itemRotate) {
+            itemRenderRotate()
+        }
+    }
+}
+
+/**
+ * Flux animation.
+ * @author MinusBounce
+ */
+class FluxAnimation : Animation("Flux") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        val progress = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        
+        transformFirstPersonItem(f, 0f)
+        translate(0.1f, 0.2f, 0.1f)
+        
+        rotate(-progress * 40f, 1f, -0.2f, 0.1f)
+        rotate(progress * 20f, 0f, 1f, 0f)
+        rotate(-progress * 20f, 0f, 0f, 0.5f)
+        
+        translate(0f, -0.3f, 0f)
+        scale(0.4f, 0.4f, 0.4f)
+        doBlockTransformations()
+        
         if (itemRotate) {
             itemRenderRotate()
         }

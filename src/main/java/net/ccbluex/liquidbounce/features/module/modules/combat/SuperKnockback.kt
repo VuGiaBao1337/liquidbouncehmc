@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
@@ -32,7 +32,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         "Mode",
         arrayOf(
             "WTap", "SprintTap", "SprintTap2", "Old", "Silent", "Packet", "SneakPacket",
-            "LegitFast", "LegitTest"
+            "LegitFast", "LegitTest", "STap"
         ),
         "Old"
     )
@@ -182,14 +182,35 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT) {
                 }
             }
 
-            "Legit Fast", "Legit Test" -> {
-                // "Legit Fast"/"Legit Test" mode: set sprintingTicksLeft to 0 (if available)
+            "LegitFast", "LegitTest" -> {
+                // LegitFast/LegitTest mode: set sprintingTicksLeft to 0 (if available)
                 try {
                     val sprintingTicksLeftField = player.javaClass.getDeclaredField("sprintingTicksLeft")
                     sprintingTicksLeftField.isAccessible = true
                     sprintingTicksLeftField.setInt(player, 0)
                 } catch (e: Exception) {
                     // Field not found or not accessible, ignore
+                }
+            }
+
+            "STap" -> {
+                if (player.isSprinting && player.serverSprintState) {
+                    // First stop sprint
+                    sendPacket(C0BPacketEntityAction(player, STOP_SPRINTING))
+                    
+                    repeat(2) {
+                        sendPackets(
+                            C0BPacketEntityAction(player, START_SPRINTING),
+                            C0BPacketEntityAction(player, STOP_SPRINTING)
+                        )
+                    }
+                    
+                    sendPacket(C0BPacketEntityAction(player, START_SPRINTING))
+                    player.isSprinting = true
+                    player.serverSprintState = true
+                
+                    player.motionX *= 0.97
+                    player.motionZ *= 0.97
                 }
             }
         }

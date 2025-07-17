@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.target.LiquidBounce
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils.getHealth
@@ -40,17 +41,15 @@ import kotlin.math.pow
  */
 @ElementInfo(name = "Target")
 class Target : Element("Target") {
+    private val targetHudStyle by choices("Style", arrayOf("LiquidBounce"), "LiquidBounce")
 
+    // LiquidBounce Style Settings
     private val roundedRectRadius by float("Rounded-Radius", 3F, 0F..5F)
-
     private val borderStrength by float("Border-Strength", 3F, 1F..5F)
-
     private val backgroundMode by choices("Background-ColorMode", arrayOf("Custom", "Rainbow"), "Custom")
     private val backgroundColor by color("Background-Color", Color.BLACK.withAlpha(150)) { backgroundMode == "Custom" }
-
     private val healthBarColor1 by color("HealthBar-Gradient1", Color(3, 65, 252))
     private val healthBarColor2 by color("HealthBar-Gradient2", Color(3, 252, 236))
-
     private val roundHealthBarShape by boolean("RoundHealthBarShape", true)
 
     private val borderColor by color("Border-Color", Color.BLACK)
@@ -107,6 +106,36 @@ class Target : Element("Target") {
         val stringWidth = (40f + (target.name?.let(titleFont::getStringWidth) ?: 0)).coerceAtLeast(118F)
 
         assumeNonVolatile {
+            // Initialize current style
+            val style = when (targetHudStyle.lowercase()) {
+                "liquidbounce" -> LiquidBounce(
+                    roundedRectRadius,
+                    borderStrength,
+                    backgroundColor,
+                    healthBarColor1,
+                    healthBarColor2,
+                    roundHealthBarShape,
+                    borderColor,
+                    textColor,
+                    titleFont,
+                    healthFont,
+                    textShadow
+                )
+                else -> LiquidBounce(
+                    roundedRectRadius,
+                    borderStrength,
+                    backgroundColor,
+                    healthBarColor1,
+                    healthBarColor2,
+                    roundHealthBarShape,
+                    borderColor,
+                    textColor,
+                    titleFont,
+                    healthFont,
+                    textShadow
+                )
+            }
+
             if (shouldRender) {
                 delayCounter = 0
             } else if (isRendered || isAlpha) {
@@ -185,113 +214,12 @@ class Target : Element("Target") {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
                 if (fadeMode && isAlpha || smoothMode && isRendered || delayCounter < vanishDelay) {
-                    val width = width.coerceAtLeast(0F)
-                    val height = height.coerceAtLeast(0F)
-
-                    RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRoundedBorderRect(
-                            0F,
-                            0F,
-                            width,
-                            height,
-                            borderStrength,
-                            if (backgroundMode == "Rainbow") 0 else backgroundCustomColor,
-                            borderCustomColor,
-                            roundedRectRadius
-                        )
-                    }
-
-                    val healthBarTop = 24F
-                    val healthBarHeight = 8F
-                    val healthBarStart = 36F
-                    val healthBarTotal = (width - 39F).coerceAtLeast(0F)
-                    val currentWidth = (easingHealth / maxHealth).coerceIn(0F, 1F) * healthBarTotal
-
-                    // background bar
-                    val backgroundBar = {
-                        drawRoundedRect(
-                            healthBarStart,
-                            healthBarTop,
-                            healthBarStart + healthBarTotal,
-                            healthBarTop + healthBarHeight,
-                            Color.BLACK.rgb,
-                            6F,
-                        )
-                    }
-
-                    if (roundHealthBarShape) {
-                        backgroundBar()
-                    }
-
-                    // main bar
-                    withClipping(main = {
-                        if (roundHealthBarShape) {
-                            drawRoundedRect(
-                                healthBarStart,
-                                healthBarTop,
-                                healthBarStart + currentWidth,
-                                healthBarTop + healthBarHeight,
-                                0,
-                                6F
-                            )
-                        } else {
-                            backgroundBar()
-                        }
-                    }, toClip = {
-                        drawGradientRect(
-                            healthBarStart.toInt(),
-                            healthBarTop.toInt(),
-                            healthBarStart.toInt() + currentWidth.toInt(),
-                            healthBarTop.toInt() + healthBarHeight.toInt(),
-                            healthBarColor1.rgb,
-                            healthBarColor2.rgb,
-                            0f
-                        )
-                    })
-
-                    val healthPercentage = (easingHealth / maxHealth * 100).toInt()
-                    val percentageText = "$healthPercentage%"
-                    val textWidth = healthFont.getStringWidth(percentageText)
-                    val calcX = healthBarStart + currentWidth - textWidth
-                    val textX = max(healthBarStart, calcX)
-                    val textY = healthBarTop - Fonts.fontRegular30.fontHeight / 2 - 2F
-                    healthFont.drawString(percentageText, textX, textY, textCustomColor, textShadow)
-
-                    val shouldRenderBody =
-                        (fadeMode && alphaText + alphaBackground + alphaBorder > 100) || (smoothMode && width + height > 100)
-
-                    if (shouldRenderBody) {
-                        val renderer = mc.renderManager.getEntityRenderObject<Entity>(target)
-
-                        if (renderer != null) {
-                            val entityTexture = renderer.getEntityTexture(target)
-
-                            glPushMatrix()
-                            val scale = 1 - easingHurtTime / 10f
-                            val f1 = (0.7F..1F).lerpWith(scale) * this.scale
-                            val color = ColorUtils.interpolateColor(Color.RED, Color.WHITE, scale)
-                            val centerX1 = (4..32).lerpWith(0.5F)
-                            val midY = (4f..28f).lerpWith(0.5F)
-
-                            glTranslatef(centerX1, midY, 0f)
-                            glScalef(f1, f1, f1)
-                            glTranslatef(-centerX1, -midY, 0f)
-
-                            if (entityTexture != null) {
-                                withClipping(main = {
-                                    drawRoundedRect(4f, 4f, 32f, 32f, 0, roundedRectRadius)
-                                }, toClip = {
-                                    drawHead(
-                                        entityTexture, 4, 4, 8f, 8f, 8, 8, 28, 28, 64F, 64F, color
-                                    )
-                                })
-                            }
-                            glPopMatrix()
-                        }
-
-                        target.name?.let {
-                            titleFont.drawString(it, healthBarStart, 6F, textCustomColor, textShadow)
-                        }
+                    // Render current style
+                    style.render(target, easingHealth, maxHealth, easingHurtTime, if (fadeMode) alphaBackground.toDouble() else 255.0)
+                    val border = style.getBorder(target, easingHealth, maxHealth)
+                    if (border != null) {
+                        width = border.x2
+                        height = border.y2
                     }
                 }
 

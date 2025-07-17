@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickedActions.nextTick
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.settings.KeyBinding
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
@@ -66,7 +67,6 @@ import net.minecraft.network.play.client.C02PacketUseEntity.Action.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.potion.Potion
 import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
@@ -81,6 +81,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
     private val simulateCooldown by boolean("SimulateCooldown", false)
     private val simulateDoubleClicking by boolean("SimulateDoubleClicking", false) { !simulateCooldown }
+
+    // Remove Reduce Damage
+    private val removeReduceDmgEnabled by boolean("RemoveReduceDmg", false)
+    private val removeReduceDmgDelay by int("RemoveReduceDmgDelay", 0, 0..100) { removeReduceDmgEnabled }
+    private var lastAttackTime = 0L
+    private var blockReleasedAt = 0L
 
     // CPS - Attack speed
     private val cps by intRange("CPS", 5..8, 1..50) { !simulateCooldown }.onChanged {
@@ -137,11 +143,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val onDestroyBlock by boolean("OnDestroyBlock", false)
 
     // AutoBlock
-    val autoBlock by choices("AutoBlock", arrayOf("Off", "Packet", "Test", "Fake", "RightHold"), "Packet")
-    private val blockMaxRange by float("BlockMaxRange", 3f, 0f..8f) { autoBlock == "Packet" }
+    val autoBlock by choices("AutoBlock", arrayOf("Off", "Packet", "Test", "Fake", "RightHold", "Silent"), "Packet")
+    private val blockMaxRange by float("BlockMaxRange", 3f, 0f..8f) { autoBlock == "Packet" || autoBlock == "Silent" }
     private val unblockMode by choices(
         "UnblockMode", arrayOf("Stop", "Switch", "Empty"), "Stop"
-    ) { autoBlock == "Packet" }
+    ) { autoBlock == "Packet" || autoBlock == "Silent" }
     private val releaseAutoBlock by boolean("ReleaseAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake") }
     val forceBlockRender by boolean("ForceBlockRender", true) {
         autoBlock !in arrayOf(
@@ -335,6 +341,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     var renderBlocking = false
     var blockStatus = false
     private var blockStopInDead = false
+    private var lastBlockTime = 0L
+    private val silentBlockDelay by int("SilentBlockDelay", 50, 0..100) { autoBlock == "Silent" }
 
     // Switch Delay
     private val switchTimer = MSTimer()
@@ -355,9 +363,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         attackTickTimes.clear()
         attackTimer.reset()
         clicks = 0
-        
+
         if (autoBlock == "RightHold") {
             mc.gameSettings.keyBindUseItem.pressed = false
+        }
+
+        if (autoBlock == "Test") {
+            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem % 8 + 1))
+            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
         }
 
         if (blinkAutoBlock) {
@@ -478,7 +491,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                 }
             }
         }
-        
+
         if (autoBlock == "RightHold") {
             val localTarget = target
             if (localTarget != null
@@ -488,11 +501,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             } else {
                 mc.gameSettings.keyBindUseItem.pressed = false
             }
-        }
-
-        if (autoBlock == "Test") {
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem % 8 + 1))
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
         }
 
         if (target != null) {
@@ -846,6 +854,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             mc.gameSettings.keyBindUseItem.pressed = false
         }
 
+        val time = System.currentTimeMillis()
+
+        if (autoBlock == "Silent" && time - lastBlockTime >= silentBlockDelay && canBlock) {
+            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+            lastBlockTime = time
+            return
+        }
+
         if (thePlayer.isBlocking && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
             stopBlocking()
 
@@ -1180,6 +1196,24 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     val onPacket = handler<PacketEvent> { event ->
         val player = mc.thePlayer ?: return@handler
         val packet = event.packet
+
+        if (removeReduceDmgEnabled && packet is C02PacketUseEntity && packet.action == C02PacketUseEntity.Action.ATTACK) {
+            val now = System.currentTimeMillis()
+
+            if (now - lastAttackTime < removeReduceDmgDelay) return@handler
+            lastAttackTime = now
+
+            if (player.isBlocking) {
+                sendPacket(
+                    C07PacketPlayerDigging(
+                        C07PacketPlayerDigging.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
+                        EnumFacing.DOWN
+                    ), false
+                )
+                blockReleasedAt = now
+            }
+        }
 
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked) return@handler
 

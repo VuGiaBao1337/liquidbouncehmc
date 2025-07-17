@@ -1,7 +1,7 @@
 /*
- * LiquidBounce Hacked Client
+ * RinBounce Hacked Client
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * https://github.com/rattermc/rinbounce69
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
@@ -34,7 +34,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
 
     private val swordMode by choices(
         "SwordMode",
-        arrayOf("None", "NCP", "UpdatedNCP", "Test", "AAC5", "SwitchItem", "InvalidC08", "Blink", "GrimAC"),
+    arrayOf("None", "NCP", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "Blink", "OldGrim", "Intave14", "GrimTest", "Test"),
         "None"
     )
 
@@ -223,13 +223,40 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
                     }
                 }
 
-                "grimac" -> {
+                "oldgrim" -> {
                     if (event.eventState == EventState.PRE) {
                         sendPacket(C09PacketHeldItemChange((mc.thePlayer.inventory.currentItem % 8) + 1))
                         sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                         sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
                     } else {
                         sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
+                    }
+                }
+                
+                "intave14" -> {
+                    if (event.eventState == EventState.PRE) {
+                        if (player.isMoving) {
+                            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                            val blockPos = BlockPos(-1, -1, -1)
+                            sendPacket(C08PacketPlayerBlockPlacement(blockPos, 255, heldItem, 0f, 0f, 0f))
+                        }
+                    }
+                }
+
+                "grimtest" -> {
+                    if (event.eventState == EventState.PRE) {
+                        if (player.isMoving) {
+                            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                            
+                            if (player.ticksExisted % 2 == 0) {
+                                val pos = BlockPos(player.posX.toInt(), (player.posY - 1).toInt(), player.posZ.toInt())
+                                sendPacket(C08PacketPlayerBlockPlacement(pos, 1, heldItem, 0f, 0f, 0f))
+                            }
+                        }
+                    } else if (event.eventState == EventState.POST) {
+                        if (!player.isBlocking && KillAura.blockStatus) {
+                            sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                        }
                     }
                 }
             }
