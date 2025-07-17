@@ -1,65 +1,65 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project version="4">
   <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
+    <option name="autoReloadType" value="SELECTIVE"/>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="86a08a71-f454-4d9d-9620-86efcd41c86b" name="Changes" comment="update killaura hit detection">
-      <change beforePath="$PROJECT_DIR$/LiquidBounce.iml" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LiquidBounce.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.ipr" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LiquidBounce.iws" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iws" afterDir="false" />
+    <list comment="update killaura hit detection" default="true" id="86a08a71-f454-4d9d-9620-86efcd41c86b" name="Changes">
+      <change afterDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iml" beforeDir="false" beforePath="$PROJECT_DIR$/LiquidBounce.iml"/>
+      <change afterDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.ipr" beforeDir="false" beforePath="$PROJECT_DIR$/LiquidBounce.ipr"/>
+      <change afterDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iws" beforeDir="false" beforePath="$PROJECT_DIR$/LiquidBounce.iws"/>
     </list>
-    <option name="SHOW_DIALOG" value="false" />
-    <option name="HIGHLIGHT_CONFLICTS" value="true" />
-    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
-    <option name="LAST_RESOLUTION" value="IGNORE" />
+    <option name="SHOW_DIALOG" value="false"/>
+    <option name="HIGHLIGHT_CONFLICTS" value="true"/>
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false"/>
+    <option name="LAST_RESOLUTION" value="IGNORE"/>
   </component>
   <component name="CreatePatchCommitExecutor">
-    <option name="PATCH_PATH" value="" />
-    <option name="REVERSE_PATCH" value="false" />
+    <option name="PATCH_PATH" value=""/>
+    <option name="REVERSE_PATCH" value="false"/>
   </component>
   <component name="DaemonCodeAnalyzer">
-    <disable_hints />
+    <disable_hints/>
   </component>
   <component name="DebuggerManager">
     <breakpoint_any converted="true">
       <breakpoint>
-        <option name="NOTIFY_CAUGHT" value="true" />
-        <option name="NOTIFY_UNCAUGHT" value="true" />
-        <option name="ENABLED" value="false" />
-        <option name="LOG_ENABLED" value="false" />
-        <option name="LOG_EXPRESSION_ENABLED" value="false" />
-        <option name="SUSPEND_POLICY" value="SuspendAll" />
-        <option name="COUNT_FILTER_ENABLED" value="false" />
-        <option name="COUNT_FILTER" value="0" />
-        <option name="CONDITION_ENABLED" value="false" />
-        <option name="CLASS_FILTERS_ENABLED" value="false" />
-        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
-        <option name="CONDITION" value="" />
-        <option name="LOG_MESSAGE" value="" />
+        <option name="NOTIFY_CAUGHT" value="true"/>
+        <option name="NOTIFY_UNCAUGHT" value="true"/>
+        <option name="ENABLED" value="false"/>
+        <option name="LOG_ENABLED" value="false"/>
+        <option name="LOG_EXPRESSION_ENABLED" value="false"/>
+        <option name="SUSPEND_POLICY" value="SuspendAll"/>
+        <option name="COUNT_FILTER_ENABLED" value="false"/>
+        <option name="COUNT_FILTER" value="0"/>
+        <option name="CONDITION_ENABLED" value="false"/>
+        <option name="CLASS_FILTERS_ENABLED" value="false"/>
+        <option name="INSTANCE_FILTERS_ENABLED" value="false"/>
+        <option name="CONDITION" value=""/>
+        <option name="LOG_MESSAGE" value=""/>
       </breakpoint>
       <breakpoint>
-        <option name="NOTIFY_CAUGHT" value="true" />
-        <option name="NOTIFY_UNCAUGHT" value="true" />
-        <option name="ENABLED" value="false" />
-        <option name="LOG_ENABLED" value="false" />
-        <option name="LOG_EXPRESSION_ENABLED" value="false" />
-        <option name="SUSPEND_POLICY" value="SuspendAll" />
-        <option name="COUNT_FILTER_ENABLED" value="false" />
-        <option name="COUNT_FILTER" value="0" />
-        <option name="CONDITION_ENABLED" value="false" />
-        <option name="CLASS_FILTERS_ENABLED" value="false" />
-        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
-        <option name="CONDITION" value="" />
-        <option name="LOG_MESSAGE" value="" />
+        <option name="NOTIFY_CAUGHT" value="true"/>
+        <option name="NOTIFY_UNCAUGHT" value="true"/>
+        <option name="ENABLED" value="false"/>
+        <option name="LOG_ENABLED" value="false"/>
+        <option name="LOG_EXPRESSION_ENABLED" value="false"/>
+        <option name="SUSPEND_POLICY" value="SuspendAll"/>
+        <option name="COUNT_FILTER_ENABLED" value="false"/>
+        <option name="COUNT_FILTER" value="0"/>
+        <option name="CONDITION_ENABLED" value="false"/>
+        <option name="CLASS_FILTERS_ENABLED" value="false"/>
+        <option name="INSTANCE_FILTERS_ENABLED" value="false"/>
+        <option name="CONDITION" value=""/>
+        <option name="LOG_MESSAGE" value=""/>
       </breakpoint>
     </breakpoint_any>
-    <breakpoint_rules converted="true" />
-    <ui_properties converted="true" />
+    <breakpoint_rules converted="true"/>
+    <ui_properties converted="true"/>
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
-      <ProjectState />
+      <ProjectState/>
     </projectState>
   </component>
   <component name="ExternalProjectsManager">
@@ -69,52 +69,52 @@
           <tree_state>
             <expand>
               <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="LiquidBounce" type="f1a62948:ProjectNode" />
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode"/>
+                <item name="LiquidBounce" type="f1a62948:ProjectNode"/>
               </path>
             </expand>
-            <select />
+            <select/>
           </tree_state>
         </projects_view>
       </state>
     </system>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$"/>
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  <component name="GitHubPullRequestSearchHistory">{
   "lastFilter": {
     "state": "OPEN",
     "assignee": "VuGiaBao1337"
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
+}</component>
+  <component name="GithubPullRequestsUISettings">{
   "selectedUrlAndAccountId": {
     "url": "https://github.com/rattermc/rinbounce69",
     "accountId": "307220dc-4d0b-4e37-801e-5829db7bcc28"
   }
-}]]></component>
+}</component>
   <component name="ModuleEditorState">
-    <option name="LAST_EDITED_MODULE_NAME" />
-    <option name="LAST_EDITED_TAB_NAME" />
+    <option name="LAST_EDITED_MODULE_NAME"/>
+    <option name="LAST_EDITED_TAB_NAME"/>
   </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 6
+  "associatedIndex": 6
 }</component>
-  <component name="ProjectId" id="2zlo03aYWYM0mFmuxnpGtjhfuvb" />
+  <component id="2zlo03aYWYM0mFmuxnpGtjhfuvb" name="ProjectId"/>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
-      <profile-state />
+      <profile-state/>
     </entry>
   </component>
   <component name="ProjectReloadState">
-    <option name="STATE" value="0" />
+    <option name="STATE" value="0"/>
   </component>
   <component name="ProjectViewState">
-    <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showLibraryContents" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true"/>
+    <option name="showLibraryContents" value="true"/>
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
+  <component name="PropertiesComponent">{
   "keyToString": {
     "Gradle.Build rinbounce69.executor": "Run",
     "Gradle.rinbounce69 [runClient].executor": "Debug",
@@ -122,162 +122,222 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main"
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Gradle.rinbounce69 [runClient]">
     <configuration default="true" factoryName="Applet" type="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
+      <module name=""/>
+      <option name="MAIN_CLASS_NAME"/>
+      <option name="HTML_FILE_NAME"/>
+      <option name="HTML_USED" value="false"/>
+      <option name="WIDTH" value="400"/>
+      <option name="HEIGHT" value="300"/>
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy"/>
+      <option name="VM_PARAMETERS"/>
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false"/>
+      <option name="ALTERNATIVE_JRE_PATH"/>
       <method>
-        <option enabled="false" name="BuildArtifacts" />
-        <option enabled="true" name="Make" />
+        <option enabled="false" name="BuildArtifacts"/>
+        <option enabled="true" name="Make"/>
       </method>
     </configuration>
     <configuration default="true" name="&lt;template&gt;" selected="false" type="WebApp">
       <Host>localhost</Host>
       <Port>5050</Port>
     </configuration>
-    <configuration name="Minecraft Client" type="Application" factoryName="Application">
-      <option name="MAIN_CLASS_NAME" value="GradleStart" />
-      <module name="LiquidBounce.main" />
-      <option name="VM_PARAMETERS" value="-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader -Xmx4096m -Xms1024m -Ddev-mode" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
+    <configuration factoryName="Application" name="Minecraft Client" type="Application">
+      <option name="MAIN_CLASS_NAME" value="GradleStart"/>
+      <module name="LiquidBounce.main"/>
+      <option name="VM_PARAMETERS" value="-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader -Xmx4096m -Xms1024m -Ddev-mode"/>
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run"/>
+      <RunnerSettings RunnerId="Run"/>
+      <ConfigurationWrapper RunnerId="Run"/>
       <method v="2">
-        <option name="Make" enabled="true" />
+        <option enabled="true" name="Make"/>
       </method>
     </configuration>
-    <configuration name="Minecraft Server" type="Application" factoryName="Application">
-      <option name="MAIN_CLASS_NAME" value="GradleStartServer" />
-      <module name="LiquidBounce.main" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../rinbounce69\run" />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
+    <configuration factoryName="Application" name="Minecraft Server" type="Application">
+      <option name="MAIN_CLASS_NAME" value="GradleStartServer"/>
+      <module name="LiquidBounce.main"/>
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../rinbounce69\run"/>
+      <RunnerSettings RunnerId="Run"/>
+      <ConfigurationWrapper RunnerId="Run"/>
       <method v="2">
-        <option name="Make" enabled="true" />
+        <option enabled="true" name="Make"/>
       </method>
     </configuration>
-    <configuration default="true" type="Application" factoryName="Application">
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <configuration default="true" factoryName="Application" type="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$"/>
       <method v="2">
-        <option name="BuildArtifacts" enabled="false" />
-        <option name="Make" enabled="true" />
+        <option enabled="false" name="BuildArtifacts"/>
+        <option enabled="true" name="Make"/>
       </method>
     </configuration>
-    <configuration name="rinbounce69 [runClient]" type="GradleRunConfiguration" factoryName="Gradle" nameIsGenerated="true">
+    <configuration factoryName="Gradle" name="rinbounce69 [runClient]" nameIsGenerated="true" type="GradleRunConfiguration">
       <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
+        <option name="executionName"/>
+        <option name="externalProjectPath" value="$PROJECT_DIR$"/>
+        <option name="externalSystemIdString" value="GRADLE"/>
+        <option name="scriptParameters" value=""/>
         <option name="taskDescriptions">
-          <list />
+          <list/>
         </option>
         <option name="taskNames">
           <list>
-            <option value="runClient" />
+            <option value="runClient"/>
           </list>
         </option>
-        <option name="vmOptions" />
+        <option name="vmOptions"/>
       </ExternalSystemSettings>
       <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
       <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
       <DebugAllEnabled>false</DebugAllEnabled>
       <RunAsTest>false</RunAsTest>
-      <method v="2" />
+      <method v="2"/>
     </configuration>
-    <configuration default="true" type="JUnit" factoryName="JUnit">
-      <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <configuration default="true" factoryName="JUnit" type="JUnit">
+      <option name="TEST_OBJECT" value="class"/>
+      <option name="VM_PARAMETERS"/>
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$"/>
       <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
+        <value defaultName="moduleWithDependencies"/>
       </option>
       <method v="2">
-        <option name="BuildArtifacts" enabled="false" />
-        <option name="Make" enabled="true" />
+        <option enabled="false" name="BuildArtifacts"/>
+        <option enabled="true" name="Make"/>
       </method>
     </configuration>
     <configuration default="true" type="Remote">
-      <option name="USE_SOCKET_TRANSPORT" value="true" />
-      <option name="SERVER_MODE" value="false" />
-      <option name="SHMEM_ADDRESS" value="javadebug" />
-      <option name="HOST" value="localhost" />
-      <option name="PORT" value="5005" />
-      <option name="AUTO_RESTART" value="false" />
+      <option name="USE_SOCKET_TRANSPORT" value="true"/>
+      <option name="SERVER_MODE" value="false"/>
+      <option name="SHMEM_ADDRESS" value="javadebug"/>
+      <option name="HOST" value="localhost"/>
+      <option name="PORT" value="5005"/>
+      <option name="AUTO_RESTART" value="false"/>
       <method v="2">
-        <option name="BuildArtifacts" enabled="false" />
+        <option enabled="false" name="BuildArtifacts"/>
       </method>
     </configuration>
     <list>
-      <item itemvalue="Application.Minecraft Client" />
-      <item itemvalue="Application.Minecraft Server" />
-      <item itemvalue="Gradle.rinbounce69 [runClient]" />
+      <item itemvalue="Application.Minecraft Client"/>
+      <item itemvalue="Application.Minecraft Server"/>
+      <item itemvalue="Gradle.rinbounce69 [runClient]"/>
     </list>
-  </component>
-  <component name="SvnConfiguration" maxAnnotateRevisions="500">
-    <option name="USER" value="" />
-    <option name="PASSWORD" value="" />
-    <option name="LAST_MERGED_REVISION" />
-    <option name="UPDATE_RUN_STATUS" value="false" />
-    <option name="MERGE_DRY_RUN" value="false" />
-    <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
-    <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
-    <option name="IGNORE_SPACES_IN_MERGE" value="false" />
-    <option name="DETECT_NESTED_COPIES" value="true" />
-    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
-    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
+    <configuration default="false" factoryName="Application" name="Minecraft Client" type="Application">
+      <extension enabled="false" name="coverage" runner="idea" sample_coverage="true"/>
+      <option name="MAIN_CLASS_NAME" value="GradleStart"/>
+      <option name="VM_PARAMETERS" value="-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader -Xmx4096m -Xms1024m -Ddev-mode"/>
+      <option name="PROGRAM_PARAMETERS" value=""/>
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$\run"/>
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false"/>
+      <option name="ALTERNATIVE_JRE_PATH" value=""/>
+      <option name="ENABLE_SWING_INSPECTOR" value="false"/>
+      <option name="ENV_VARIABLES"/>
+      <option name="PASS_PARENT_ENVS" value="true"/>
+      <module name="LiquidBounce.main"/>
+      <RunnerSettings RunnerId="Run"/>
+      <ConfigurationWrapper RunnerId="Run"/>
+    </configuration>
+    <configuration default="false" factoryName="Application" name="Minecraft Server" type="Application">
+      <extension enabled="false" name="coverage" runner="idea" sample_coverage="true"/>
+      <option name="MAIN_CLASS_NAME" value="GradleStartServer"/>
+      <option name="VM_PARAMETERS" value=""/>
+      <option name="PROGRAM_PARAMETERS" value=""/>
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$\run"/>
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false"/>
+      <option name="ALTERNATIVE_JRE_PATH" value=""/>
+      <option name="ENABLE_SWING_INSPECTOR" value="false"/>
+      <option name="ENV_VARIABLES"/>
+      <option name="PASS_PARENT_ENVS" value="true"/>
+      <module name="LiquidBounce.main"/>
+      <RunnerSettings RunnerId="Run"/>
+      <ConfigurationWrapper RunnerId="Run"/>
+    </configuration>
+  <configuration default="false" factoryName="Application" name="Minecraft Client" type="Application">
+            <extension enabled="false" name="coverage" runner="idea" sample_coverage="true"/>
+            <option name="MAIN_CLASS_NAME" value="GradleStart"/>
+            <option name="VM_PARAMETERS" value="-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader -Xmx4096m -Xms1024m -Ddev-mode"/>
+            <option name="PROGRAM_PARAMETERS" value=""/>
+            <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$\run"/>
+            <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false"/>
+            <option name="ALTERNATIVE_JRE_PATH" value=""/>
+            <option name="ENABLE_SWING_INSPECTOR" value="false"/>
+            <option name="ENV_VARIABLES"/>
+            <option name="PASS_PARENT_ENVS" value="true"/>
+            <module name="LiquidBounce.main"/>
+            <RunnerSettings RunnerId="Run"/>
+            <ConfigurationWrapper RunnerId="Run"/>
+        </configuration>
+        <configuration default="false" factoryName="Application" name="Minecraft Server" type="Application">
+            <extension enabled="false" name="coverage" runner="idea" sample_coverage="true"/>
+            <option name="MAIN_CLASS_NAME" value="GradleStartServer"/>
+            <option name="VM_PARAMETERS" value=""/>
+            <option name="PROGRAM_PARAMETERS" value=""/>
+            <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$\run"/>
+            <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false"/>
+            <option name="ALTERNATIVE_JRE_PATH" value=""/>
+            <option name="ENABLE_SWING_INSPECTOR" value="false"/>
+            <option name="ENV_VARIABLES"/>
+            <option name="PASS_PARENT_ENVS" value="true"/>
+            <module name="LiquidBounce.main"/>
+            <RunnerSettings RunnerId="Run"/>
+            <ConfigurationWrapper RunnerId="Run"/>
+        </configuration>
+    </component>
+  <component maxAnnotateRevisions="500" name="SvnConfiguration">
+    <option name="USER" value=""/>
+    <option name="PASSWORD" value=""/>
+    <option name="LAST_MERGED_REVISION"/>
+    <option name="UPDATE_RUN_STATUS" value="false"/>
+    <option name="MERGE_DRY_RUN" value="false"/>
+    <option name="MERGE_DIFF_USE_ANCESTRY" value="true"/>
+    <option name="UPDATE_LOCK_ON_DEMAND" value="false"/>
+    <option name="IGNORE_SPACES_IN_MERGE" value="false"/>
+    <option name="DETECT_NESTED_COPIES" value="true"/>
+    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true"/>
+    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true"/>
     <myIsUseDefaultProxy>false</myIsUseDefaultProxy>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="86a08a71-f454-4d9d-9620-86efcd41c86b" name="Changes" comment="" />
+      <changelist comment="" id="86a08a71-f454-4d9d-9620-86efcd41c86b" name="Changes"/>
       <created>1752314794398</created>
-      <option name="number" value="Default" />
-      <option name="presentableId" value="Default" />
+      <option name="number" value="Default"/>
+      <option name="presentableId" value="Default"/>
       <updated>1752314794398</updated>
     </task>
     <task id="LOCAL-00001" summary="update killaura hit detection">
-      <option name="closed" value="true" />
+      <option name="closed" value="true"/>
       <created>1752318388545</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
+      <option name="number" value="00001"/>
+      <option name="presentableId" value="LOCAL-00001"/>
+      <option name="project" value="LOCAL"/>
       <updated>1752318388545</updated>
     </task>
     <task id="LOCAL-00002" summary="update killaura hit detection">
-      <option name="closed" value="true" />
+      <option name="closed" value="true"/>
       <created>1752318542363</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
+      <option name="number" value="00002"/>
+      <option name="presentableId" value="LOCAL-00002"/>
+      <option name="project" value="LOCAL"/>
       <updated>1752318542363</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
-    <servers />
+    <option name="localTasksCounter" value="3"/>
+    <servers/>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State/>
           </value>
         </entry>
       </map>
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update killaura hit detection" />
-    <option name="LAST_COMMIT_MESSAGE" value="update killaura hit detection" />
-    <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
+    <MESSAGE value="update killaura hit detection"/>
+    <option name="LAST_COMMIT_MESSAGE" value="update killaura hit detection"/>
+    <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true"/>
   </component>
 </project>
