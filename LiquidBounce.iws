@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="86a08a71-f454-4d9d-9620-86efcd41c86b" name="Changes" comment="update killaura hit detection">
-      <change beforePath="$PROJECT_DIR$/LiquidBounce.iml" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LiquidBounce.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.ipr" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LiquidBounce.iws" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iws" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TaskSync/.global/tasks.txt" beforeDir="false" afterPath="$PROJECT_DIR$/TaskSync/.global/tasks.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AnticheatDetector.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AnticheatDetector.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
