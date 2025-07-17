@@ -8,6 +8,8 @@
       <change beforePath="$PROJECT_DIR$/LiquidBounce.iml" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LiquidBounce.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.ipr" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LiquidBounce.iws" beforeDir="false" afterPath="$PROJECT_DIR$/LiquidBounce.iws" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TaskSync/.global/tasks.txt" beforeDir="false" afterPath="$PROJECT_DIR$/TaskSync/.global/tasks.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AnticheatDetector.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AnticheatDetector.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,20 +82,21 @@
     </system>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/TaskSync" />
+    <option name="ROOT_SYNC" value="SYNC" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "VuGiaBao1337"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;VuGiaBao1337&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/rattermc/rinbounce69",
-    "accountId": "307220dc-4d0b-4e37-801e-5829db7bcc28"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/rattermc/rinbounce69&quot;,
+    &quot;accountId&quot;: &quot;307220dc-4d0b-4e37-801e-5829db7bcc28&quot;
   }
-}]]></component>
+}</component>
   <component name="ModuleEditorState">
     <option name="LAST_EDITED_MODULE_NAME" />
     <option name="LAST_EDITED_TAB_NAME" />
@@ -114,15 +117,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.Build rinbounce69.executor": "Run",
-    "Gradle.rinbounce69 [runClient].executor": "Debug",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.Build rinbounce69.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.rinbounce69 [runClient].executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/PC/Downloads/SigmaBounce/rinbounce69&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Gradle.rinbounce69 [runClient]">
     <configuration default="true" factoryName="Applet" type="Applet">
       <module name="" />

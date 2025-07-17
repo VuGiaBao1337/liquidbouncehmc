@@ -1,11 +1,4 @@
-/*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
- * @author RtxOP
- */
 package net.ccbluex.liquidbounce.features.module.modules.misc
-
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -30,18 +23,27 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
     private var check = false
     private var ticksPassed = 0
     private var detectedAnticheat: String? = null
+    private var worldChanged = false
+    private var detectionAttempted = false
     
-    // Track position and velocity packets for additional detection
     private var positionPackets = 0
     private var velocityPackets = 0
     private var lastPositionTime = 0L
+    private var currentServer = ""
     
     val onPacket = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
             is S32PacketConfirmTransaction -> {
-                if (check) handleTransaction(packet.actionNumber.toInt())
+                if (check && !detectionAttempted) handleTransaction(packet.actionNumber.toInt())
             }
             is S01PacketJoinGame -> {
+          
+                val newServer = remoteIp
+                if (currentServer != newServer) {
+                    worldChanged = true
+                    currentServer = newServer
+                    detectionAttempted = false
+                }
                 reset().also { check = true }
                 chat("§8[§b§lAnticheatDetector§8] §7Analyzing server anticheat...")
             }
@@ -65,11 +67,9 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
     
     val onTick = handler<GameTickEvent> {
         if (check && ticksPassed++ > 60) {
-            // If we haven't detected anything after 3 seconds (60 ticks)
-            if (detectedAnticheat == null) {
+            if (detectedAnticheat == null && !detectionAttempted) {
                 analyzeSecondaryPatterns()
-            } else {
-                reset()
+                detectionAttempted = true
             }
         }
     }
@@ -77,10 +77,19 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
     private fun handleTransaction(action: Int) {
         actionNumbers.add(action).also { if (debug) chat("§7ID: $action") }
         ticksPassed = 0
-        if (actionNumbers.size >= 5) analyzeActionNumbers()
+        if (actionNumbers.size >= 5) {
+            analyzeActionNumbers()
+            detectionAttempted = true
+        }
     }
     
     private fun analyzeActionNumbers() {
+        if (actionNumbers.isEmpty()) {
+            detectedAnticheat = "Unknown"
+            notify("Unknown")
+            return
+        }
+        
         val diffs = actionNumbers.windowed(2) { it[1] - it[0] }
         val first = actionNumbers.first()
         
@@ -119,16 +128,12 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
                 && actionNumbers.drop(3).windowed(2).all { it[1] - it[0] == 1 } 
                 -> "Old Vulcan"
             
-            else -> null
+            else -> "Unknown"
         }
-        
-        if (anticheat != null) {
-            detectedAnticheat = anticheat
-            notify(anticheat)
-            if (notifyRecommendations) showRecommendations(anticheat)
-        } else {
-            if (debug) logNumbers()
-        }
+
+        detectedAnticheat = anticheat
+        notify(anticheat ?: "Unknown")
+        if (notifyRecommendations) showRecommendations(anticheat ?: "Unknown")
     }
     
     private fun analyzeSecondaryPatterns() {
@@ -143,18 +148,17 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
         detectedAnticheat = anticheat
         notify(anticheat)
         if (notifyRecommendations) showRecommendations(anticheat)
-        reset()
     }
     
     private fun showRecommendations(anticheat: String) {
         val recommendations = when (anticheat) {
-            "Watchdog" -> "KillAura: Range 3.2-3.5, NoSwing: Off, Criticals: Packet"
-            "Verus" -> "KillAura: Range 3.0-3.2, Velocity: 90%H 100%V, NoFall: Edit"
-            "Matrix" -> "KillAura: Range 3.0, Velocity: 0%H 0%V, Speed: Matrix"
-            "Vulcan" -> "KillAura: Range 3.0, Velocity: Reverse, NoFall: Packet"
-            "Intave" -> "KillAura: Range 3.0, Velocity: 0%H 0%V, Speed: Custom"
-            "Grim" -> "Use minimal modules, very strict detection"
-            "NCP/AAC" -> "KillAura: Range 3.5-4.0, Velocity: Simple, Speed: NCP"
+            "Watchdog" -> "None"
+            "Verus" -> "None"
+            "Matrix" -> "None"
+            "Vulcan" -> "None"
+            "Intave" -> "None"
+            "Grim" -> "None"
+            "NCP/AAC" -> "None"
             else -> null
         }
         
@@ -162,9 +166,9 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
             chat("§8[§b§lAnticheatDetector§8] §7Recommended settings for §b$anticheat§7:")
             chat("§8[§b§lAnticheatDetector§8] §7$recommendations")
             
-            if (autoDisable && anticheat != "Unknown/Vanilla") {
+            if (autoDisable && anticheat != "Unknown/Vanilla" && anticheat != "Unknown") {
                 chat("§8[§b§lAnticheatDetector§8] §7Auto-configuring bypass settings...")
-                // Here you would implement auto-configuration of other modules
+               
             }
         }
     }
@@ -177,10 +181,11 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
     }
 
     private fun logNumbers() {
-        chat("§8[§b§lAnticheatDetector§8] §7Action Numbers: ${actionNumbers.joinToString()}")
-        chat("§8[§b§lAnticheatDetector§8] §7Differences: ${actionNumbers.windowed(2) { it[1] - it[0] }.joinToString()}")
+        if (debug && actionNumbers.isNotEmpty()) {
+            chat("§8[§b§lAnticheatDetector§8] §7Action Numbers: ${actionNumbers.joinToString()}")
+            chat("§8[§b§lAnticheatDetector§8] §7Differences: ${actionNumbers.windowed(2) { it[1] - it[0] }.joinToString()}")
+        }
     }
-
     private fun reset() {
         actionNumbers.clear()
         flagPatterns.clear()
@@ -190,7 +195,19 @@ object AnticheatDetector : Module("AnticheatDetector", Category.MISC) {
         ticksPassed = 0
         check = false
         detectedAnticheat = null
+        detectionAttempted = false
     }
 
-    override fun onEnable() = reset()
+    override fun onEnable() {
+        reset()
+        worldChanged = false
+        detectionAttempted = false
+        currentServer = remoteIp
+    }
+    
+    override fun onDisable() {
+        reset()
+        worldChanged = false
+        detectionAttempted = false
+    }
 }
