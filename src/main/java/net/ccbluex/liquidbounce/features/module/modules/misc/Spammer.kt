@@ -18,7 +18,7 @@ object Spammer : Module("Spammer", Category.MISC, subjective = true) {
 
     private val delay by intRange("Delay", 500..1000, 0..5000)
 
-    private val message by text("Message", "$RINBOUNCE ClIENT ON TOP")
+    private val message by text("Message", "RINBOUNCE ClIENT ON TOP")
 
     private val custom by boolean("Custom", false)
 
