@@ -14,16 +14,15 @@ import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.movement.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.potion.Potion
 
 object Regen : Module("Regen", Category.PLAYER) {
 
-    private val mode by choices("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")
-    private val speed by int("Speed", 100, 1..100) { mode == "Vanilla" }
-
-    private val delay by int("Delay", 0, 0..10000)
+    private val mode by choices("Mode", arrayOf("Vanilla", "Spartan", "OldGrim"), "Vanilla")
+    private val speed by int("Speed", 5, 1..100) { mode == "Vanilla" }
+    private val delay by int("Delay", 0, 0..100)
     private val health by int("Health", 18, 0..20)
-    private val food by int("Food", 18, 0..20)
 
     private val noAir by boolean("NoAir", false)
     private val potionEffect by boolean("PotionEffect", false)
@@ -44,7 +43,6 @@ object Regen : Module("Regen", Category.PLAYER) {
         if (
             !mc.playerController.gameIsSurvivalOrAdventure()
             || noAir && !serverOnGround
-            || thePlayer.foodStats.foodLevel <= food
             || !thePlayer.isEntityAlive
             || thePlayer.health >= health
             || (potionEffect && !thePlayer.isPotionActive(Potion.regeneration))
@@ -52,21 +50,39 @@ object Regen : Module("Regen", Category.PLAYER) {
         ) return@handler
 
         when (mode.lowercase()) {
-            "vanilla" -> {
-                repeat(speed) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
-                }
+    "vanilla" -> {
+        repeat(speed) {
+            sendPacket(C03PacketPlayer(serverOnGround))
+        }
+    }
+
+    "spartan" -> {
+        if (!thePlayer.isMoving && serverOnGround) {
+            repeat(9) {
+                sendPacket(C03PacketPlayer(serverOnGround))
             }
+            mc.timer.timerSpeed = 0.45F
+            resetTimer = true
+        }
+    }
 
-            "spartan" -> {
-                if (!thePlayer.isMoving && serverOnGround) {
-                    repeat(9) {
-                        sendPacket(C03PacketPlayer(serverOnGround))
-                    }
+    "oldgrim" -> {
+        repeat(speed) {
+            sendPacket(
+                C06PacketPlayerPosLook(
+                    thePlayer.posX,
+                    thePlayer.posY,
+                    thePlayer.posZ,
+                    thePlayer.rotationYaw,
+                    thePlayer.rotationPitch,
+                    serverOnGround
+                )
+            )
+        }
+    }
+}
 
-                    mc.timer.timerSpeed = 0.45F
-                    resetTimer = true
-                }
+
             }
         }
 
