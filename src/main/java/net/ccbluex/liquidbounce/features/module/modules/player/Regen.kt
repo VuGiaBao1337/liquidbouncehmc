@@ -14,19 +14,19 @@ import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.movement.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook //ok
 import net.minecraft.potion.Potion
 
 object Regen : Module("Regen", Category.PLAYER) {
 
-    private val mode by choices("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")
+    private val mode by choices("Mode", arrayOf("Vanilla", "Spartan", "OldGrim"), "Vanilla") //Add OldGrim
     private val speed by int("Speed", 100, 1..100) { mode == "Vanilla" }
 
     private val delay by int("Delay", 0, 0..10000)
     private val health by int("Health", 18, 0..20)
-    private val food by int("Food", 18, 0..20)
-
-    private val noAir by boolean("NoAir", false)
-    private val potionEffect by boolean("PotionEffect", false)
+//xoa cmm Food r
+    private val noAir by boolean("NoAir", true)
+    private val potionEffect by boolean("PotionEffect", true)
 
     private val timer = MSTimer()
 
@@ -44,7 +44,6 @@ object Regen : Module("Regen", Category.PLAYER) {
         if (
             !mc.playerController.gameIsSurvivalOrAdventure()
             || noAir && !serverOnGround
-            || thePlayer.foodStats.foodLevel <= food
             || !thePlayer.isEntityAlive
             || thePlayer.health >= health
             || (potionEffect && !thePlayer.isPotionActive(Potion.regeneration))
@@ -73,3 +72,17 @@ object Regen : Module("Regen", Category.PLAYER) {
         timer.reset()
     }
 }
+        "oldgrim" -> { //OldGrim
+            repeat(speed) {
+                sendPacket(
+                    C03PacketPlayer.C06PacketPlayerPosLook(
+                        thePlayer.posX,
+                        thePlayer.posY,
+                        thePlayer.posZ,
+                        thePlayer.rotationYaw,
+                        thePlayer.rotationPitch,
+                        serverOnGround
+                )
+            )
+        }
+    }
